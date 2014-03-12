@@ -1,4 +1,8 @@
-package com.mcindoe.dashstreamer;
+package com.mcindoe.dashstreamer.views;
+
+import com.mcindoe.dashstreamer.R;
+import com.mcindoe.dashstreamer.R.layout;
+import com.mcindoe.dashstreamer.R.menu;
 
 import android.os.Bundle;
 import android.app.Activity;
