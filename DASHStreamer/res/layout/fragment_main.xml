@@ -9,6 +9,7 @@
     tools:context="com.mcindoe.dashstreamer.MainActivity$PlaceholderFragment" >
     
     <Button
+        style="@style/AppTheme.Button.Navigation"
         android:id="@+id/start_video_button"
         android:text="@string/start_video_button"
         android:layout_width="wrap_content"

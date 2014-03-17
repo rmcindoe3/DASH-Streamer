@@ -11,19 +11,20 @@
     
     <LinearLayout
         android:layout_alignBottom="@id/my_video_view"
-        android:background="#99000000"
+        android:background="@color/faded_navigation_button_color"
         android:gravity="center_vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal" >
         
-        <Button
+        <ImageButton
             android:id="@+id/play_pause_button"
+            android:background="@drawable/selector_play_button"
+            android:src="@drawable/pause_icon"
             android:gravity="center"
             android:layout_width="0dp"
             android:layout_weight="1"
         	android:textColor="#FFFFFF"
-            android:text="P"
             android:layout_height="wrap_content" />
 
     	<SeekBar
