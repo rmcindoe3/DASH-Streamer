@@ -36,12 +36,15 @@ public class VideoFragment extends Fragment {
 
 		View rootView = inflater.inflate(R.layout.fragment_video, container, false);
 
+		//Initialize the video player variables.
 		this.currVideoNum = 0;
 		this.numVideos = getArguments().getInt(NUM_VIDEOS, 0);
 		this.filePath = getArguments().getString(FILE_PATH, "");
 		
+		//Grab out video view.
 		mVideoView = (VideoView)rootView.findViewById(R.id.my_video_view);
 		
+		//When the current video finishes, start the next one if available.
 		mVideoView.setOnCompletionListener(new OnCompletionListener() {
 
 			@Override
@@ -53,13 +56,32 @@ public class VideoFragment extends Fragment {
 			}
 		});
 		
-		if(updateVideoPath()) {
-			mVideoView.start();
-		}
-		
 		return rootView;
 	}
 
+	@Override
+	public void onPause() {
+		
+		//TODO: Deal with activity pausing...
+
+		super.onPause();
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		
+		//Start the video now if available.
+		if(updateVideoPath()) {
+			mVideoView.start();
+		}
+	}
+
+	/**
+	 * Updates the video path of our Video View to the next video clip.
+	 * @return - true if the video is ready to be started
+	 * 		   - false if there are no more videos to be played.
+	 */
 	private boolean updateVideoPath() {
 
 		if(currVideoNum == numVideos) {
@@ -74,6 +96,10 @@ public class VideoFragment extends Fragment {
 		return true;
 	}
 
+	/**
+	 * Gets the file path for the current video we want to play.
+	 * @return - String describing the file location of the next video clip to play.
+	 */
 	private String getCurrentVideoFilePath() {
 		return Environment.getExternalStorageDirectory() + filePath + String.format("%02d", currVideoNum) + ".mp4";
 	}

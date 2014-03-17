@@ -7,17 +7,33 @@ import android.view.MenuItem;
 
 import com.mcindoe.dashstreamer.R;
 
-public class MainActivity extends ActionBarActivity {
+public class PlayActivity extends ActionBarActivity {
+	
+	public static final String VIDEO_TITLE = "AE03";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
+		setContentView(R.layout.activity_play);
+		
+		setTitle(getIntent().getExtras().getString(VIDEO_TITLE, "Video"));
 
 		if (savedInstanceState == null) {
+		
+			//Create our bundle for our video fragment.
+			Bundle args = new Bundle();
+			args.putInt(VideoFragment.NUM_VIDEOS, 5);
+			args.putString(VideoFragment.FILE_PATH, "/DASHStreamer/bb_10s_");
+
+			//Create our video fragment and add our bundle to it.
+			VideoFragment vidFrag = new VideoFragment();
+			vidFrag.setArguments(args);
+
+			//Add the video fragment to our container.
 			getSupportFragmentManager().beginTransaction()
-					.add(R.id.container, new MainActivityControlFragment()).commit();
+					.add(R.id.container, vidFrag).commit();
 		}
+		
 	}
 
 	@Override
