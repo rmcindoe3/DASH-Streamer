@@ -20,7 +20,7 @@
         <ImageButton
             android:id="@+id/play_pause_button"
             android:background="@drawable/selector_play_button"
-            android:src="@drawable/pause_icon"
+            android:src="@drawable/play_icon"
             android:gravity="center"
             android:layout_width="0dp"
             android:layout_weight="1"

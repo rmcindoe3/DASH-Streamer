@@ -82,6 +82,9 @@ public class VideoFragment extends Fragment {
 			}
 		});
 		
+		//Setup the video path to the start of the first video.
+		updateVideoPath();
+		
 		return rootView;
 	}
 
@@ -96,11 +99,6 @@ public class VideoFragment extends Fragment {
 	@Override
 	public void onResume() {
 		super.onResume();
-		
-		//Start the video now if available.
-		if(updateVideoPath()) {
-			mVideoView.start();
-		}
 	}
 
 	/**
