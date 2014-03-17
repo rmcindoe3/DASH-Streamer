@@ -8,5 +8,40 @@
         android:id="@+id/my_video_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+    
+    <LinearLayout
+        android:layout_alignBottom="@id/my_video_view"
+        android:background="#99000000"
+        android:gravity="center_vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
+        
+        <Button
+            android:id="@+id/play_pause_button"
+            android:gravity="center"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+        	android:textColor="#FFFFFF"
+            android:text="P"
+            android:layout_height="wrap_content" />
+
+    	<SeekBar
+        	android:id="@+id/video_seek_bar"
+        	android:layout_width="0dp"
+            android:layout_weight="6"
+        	android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/time_text_view"
+            android:padding="2dp"
+            android:gravity="center"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+        	android:textColor="#FFFFFF"
+            android:text="@string/default_video_time"
+            android:layout_height="wrap_content" />
+        
+    </LinearLayout>
 
 </RelativeLayout>

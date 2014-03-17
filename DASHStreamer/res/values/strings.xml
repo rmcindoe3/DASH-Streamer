@@ -6,5 +6,6 @@
     <string name="title_activity_main">Select Video</string>
     <string name="title_activity_play">Play Activity</string>
     <string name="start_video_button">Play Video</string>
+    <string name="default_video_time">00:00</string>
 
 </resources>
