@@ -8,7 +8,9 @@ import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.VideoView;
 
 import com.mcindoe.dashstreamer.R;
@@ -21,6 +23,7 @@ import com.mcindoe.dashstreamer.controllers.Utils;
 public class VideoFragment extends Fragment {
 
 	private VideoView mVideoView;
+	private ImageButton mPlayPauseButton;
 	private int currVideoNum, numVideos;
 	private String filePath;
 	
@@ -53,6 +56,29 @@ public class VideoFragment extends Fragment {
 				if(updateVideoPath()) {
 					mVideoView.start();
 				}
+				else {
+					mPlayPauseButton.setImageResource(R.drawable.play_icon);
+				}
+			}
+		});
+
+		mPlayPauseButton = (ImageButton)rootView.findViewById(R.id.play_pause_button);
+		
+		mPlayPauseButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+
+				//If the video is playing, pause it.
+				if(mVideoView.isPlaying()) {
+					mVideoView.pause();
+					mPlayPauseButton.setImageResource(R.drawable.play_icon);
+				}
+				//If the video is not playing, play it...
+				else {
+					mVideoView.start();
+					mPlayPauseButton.setImageResource(R.drawable.pause_icon);
+				}
 			}
 		});
 		
@@ -84,7 +110,12 @@ public class VideoFragment extends Fragment {
 	 */
 	private boolean updateVideoPath() {
 
+		//If this is the last video clip for this video...
 		if(currVideoNum == numVideos) {
+			
+			//reset the video number counter and return false to not play
+			currVideoNum = 0;
+			mVideoView.setVideoPath(getCurrentVideoFilePath());
 			return false;
 		}
 
@@ -101,6 +132,6 @@ public class VideoFragment extends Fragment {
 	 * @return - String describing the file location of the next video clip to play.
 	 */
 	private String getCurrentVideoFilePath() {
-		return Environment.getExternalStorageDirectory() + filePath + String.format("%02d", currVideoNum) + ".mp4";
+		return Environment.getExternalStorageDirectory() + filePath + currVideoNum + ".mp4";
 	}
 }
