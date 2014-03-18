@@ -21,6 +21,8 @@ import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.VideoView;
 
 import com.mcindoe.dashstreamer.R;
@@ -34,7 +36,9 @@ public class VideoFragment extends Fragment {
 
 	private VideoView mVideoView;
 	private ImageButton mPlayPauseButton;
-	private int currVideoNum, numVideos;
+	private SeekBar mVideoSeekBar;
+
+	private int currVideoNum, numVideos, videoLength, clipLength;
 	private String filePath;
 	
 	private LinearLayout mControllerLayout;
@@ -44,12 +48,15 @@ public class VideoFragment extends Fragment {
 	
 	private static final int SHOWN = 1, HIDING = 2, HIDDEN = 3, SHOWING = 4;
 	private int mControllerState;
+	private boolean keepControllerShown;
 	
 	private ObjectAnimator mShowControllerAnimator;
 	private ObjectAnimator mHideControllerAnimator;
 	
 	public static final String NUM_VIDEOS = "AE01";
 	public static final String FILE_PATH = "AE02";
+	public static final String VIDEO_LENGTH = "AF02";
+	public static final String CLIP_LENGTH = "BF02";
 	
 	public VideoFragment() {
 
@@ -69,11 +76,15 @@ public class VideoFragment extends Fragment {
 		this.currVideoNum = 0;
 		this.numVideos = getArguments().getInt(NUM_VIDEOS, 0);
 		this.filePath = getArguments().getString(FILE_PATH, "");
+		this.videoLength = getArguments().getInt(VIDEO_LENGTH, 0);
+		this.clipLength = getArguments().getInt(CLIP_LENGTH, 10);
+		keepControllerShown = true;
 		
 		//Grab some views.
 		mVideoView = (VideoView)rootView.findViewById(R.id.my_video_view);
 		mControllerLayout = (LinearLayout)rootView.findViewById(R.id.controller_layout);
 		mPlayPauseButton = (ImageButton)rootView.findViewById(R.id.play_pause_button);
+		mVideoSeekBar = (SeekBar)rootView.findViewById(R.id.video_seek_bar);
 		
 		//When the current video finishes, start the next one if available.
 		mVideoView.setOnCompletionListener(new OnCompletionListener() {
@@ -88,6 +99,8 @@ public class VideoFragment extends Fragment {
 				//Otherwise set the play/pause button to the play icon and 
 				// wait for the user to press play.
 				else {
+					keepControllerShown = true;
+					showController();
 					mPlayPauseButton.setImageResource(R.drawable.play_icon);
 				}
 			}
@@ -100,9 +113,18 @@ public class VideoFragment extends Fragment {
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
 
-				//Shows the controller if it's hidden or refreshes
-				// the hiding timer if it's already shown.
-				showController();
+				//If the video is playing right now, then show the controller
+				// and hide it again after 2 seconds
+				if(mVideoView.isPlaying()) {
+					keepControllerShown = false;
+					showController();
+				}
+				//If the video is not playing right now, then show the 
+				// controller permanently.
+				else {
+					keepControllerShown = true;
+					showController();
+				}
 				return true;
 			}
 			
@@ -118,16 +140,45 @@ public class VideoFragment extends Fragment {
 				if(mVideoView.isPlaying()) {
 					mVideoView.pause();
 					mPlayPauseButton.setImageResource(R.drawable.play_icon);
+
+					//shows the controller without a hide timer.
+					keepControllerShown = true;
+					showController();
 				}
 				//If the video is not playing, play it...
 				else {
 					mVideoView.start();
 					mPlayPauseButton.setImageResource(R.drawable.pause_icon);
+					
+					//Shows the controller but hides it after 2 seconds.
+					keepControllerShown = false;
+					showController();
 				}
 					
-				//Makes sure the timer for the hiding of the video 
-				// controls is reset.
-				showController();
+			}
+		});
+		
+		//Set the max value of the seek bar to the length of the video in seconds.
+		mVideoSeekBar.setMax(videoLength);
+		mVideoSeekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+
+			@Override
+			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+				
+
+			}
+
+			@Override
+			public void onStartTrackingTouch(SeekBar seekBar) {
+				//Shows the controller and tells it to not hide.
+				//showController(true);
+			}
+
+			@Override
+			public void onStopTrackingTouch(SeekBar seekBar) {
+				//Shows the controller, but hides it after 2 seconds.
+				//showController(false);
 			}
 		});
 		
@@ -215,7 +266,9 @@ public class VideoFragment extends Fragment {
 		// and then schedule a new task to hide the controller.
 		mControllerTimer.cancel();
 		mControllerTimer = new Timer();
-		mControllerTimer.schedule(new HideControllerTimerTask(), 2000);
+		if(!keepControllerShown) {
+			mControllerTimer.schedule(new HideControllerTimerTask(), 2000);
+		}
 	}
 	
 	/**
