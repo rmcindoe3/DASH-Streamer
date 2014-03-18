@@ -9,6 +9,7 @@ import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
+import android.media.MediaPlayer.OnPreparedListener;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.Fragment;
@@ -23,6 +24,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
+import android.widget.TextView;
 import android.widget.VideoView;
 
 import com.mcindoe.dashstreamer.R;
@@ -37,12 +39,15 @@ public class VideoFragment extends Fragment {
 	private VideoView mVideoView;
 	private ImageButton mPlayPauseButton;
 	private SeekBar mVideoSeekBar;
+	private TextView mVideoTimeTextView;
 
 	private int currClipNum, numClips, clipLength, videoLength;
 	private String filePath;
 	
 	private LinearLayout mControllerLayout;
 	private Timer mControllerTimer;
+	
+	private Timer mSeekBarTimer;
 	
 	private Activity mSourceActivity;
 	
@@ -85,6 +90,7 @@ public class VideoFragment extends Fragment {
 		mControllerLayout = (LinearLayout)rootView.findViewById(R.id.controller_layout);
 		mPlayPauseButton = (ImageButton)rootView.findViewById(R.id.play_pause_button);
 		mVideoSeekBar = (SeekBar)rootView.findViewById(R.id.video_seek_bar);
+		mVideoTimeTextView = (TextView)rootView.findViewById(R.id.time_text_view);
 		
 		//When the current video finishes, start the next one if available.
 		mVideoView.setOnCompletionListener(new OnCompletionListener() {
@@ -93,6 +99,7 @@ public class VideoFragment extends Fragment {
 			public void onCompletion(MediaPlayer mp) {
 
 				//If there is still more video clips to be played, start them...
+				currClipNum++;
 				if(updateVideoPath()) {
 					mVideoView.start();
 				}
@@ -168,9 +175,9 @@ public class VideoFragment extends Fragment {
 				//Make sure we're reacting to changes caused by the user.
 				if(fromUser) {
 					
-					//Updates the current 
+					//Updates the current clip number as well as the text view for time.
 					currClipNum = progress/clipLength;
-					updateVideoPath();
+					updateVideoTimeTextView(progress*1000);
 				}
 
 			}
@@ -181,8 +188,10 @@ public class VideoFragment extends Fragment {
 				keepControllerShown = true;
 				showController();
 				
+				//If the video is playing, pause it and cancel the seek bar timer.
 				if(mVideoView.isPlaying()) {
 					mVideoView.pause();
+					mSeekBarTimer.cancel();
 				}
 			}
 
@@ -192,7 +201,24 @@ public class VideoFragment extends Fragment {
 				keepControllerShown = false;
 				showController();
 				
+				//updates the video path with the new clip number and starts the video.
+				updateVideoPath();
 				mVideoView.start();
+				mPlayPauseButton.setImageResource(R.drawable.pause_icon);
+				
+			}
+		});
+		
+		//Sets up our timer for updating the seek bar / time text view.
+		mSeekBarTimer = new Timer();
+		mVideoView.setOnPreparedListener(new OnPreparedListener() {
+
+			@Override
+			public void onPrepared(MediaPlayer mp) {
+				
+				mSeekBarTimer.cancel();
+				mSeekBarTimer = new Timer();
+				mSeekBarTimer.scheduleAtFixedRate(new UpdateVideoUITimerTask(), 0, 1000);
 			}
 		});
 		
@@ -230,8 +256,6 @@ public class VideoFragment extends Fragment {
 		Log.d(Utils.LOG_TAG, "Setting video path: " + getCurrentVideoFilePath());
 		mVideoView.setVideoPath(getCurrentVideoFilePath());
 
-		currClipNum++;
-
 		return true;
 	}
 
@@ -241,6 +265,48 @@ public class VideoFragment extends Fragment {
 	 */
 	private String getCurrentVideoFilePath() {
 		return Environment.getExternalStorageDirectory() + filePath + currClipNum + ".mp4";
+	}
+	
+	/**
+	 * Custom timer task that simply hides our video controller when run.
+	 */
+	private class UpdateVideoUITimerTask extends TimerTask {
+
+		@Override
+		public void run() {
+			
+			//We have to run this on our UI thread according to Android OS.
+			mSourceActivity.runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					
+					//Calculates the current time of the video according to cliplength, current
+					// clip number and the current position in the clip that is playing...
+					int currTime = clipLength*1000*currClipNum + mVideoView.getCurrentPosition();
+					
+					//Update the progress bar and video time text view with the new time.
+					mVideoSeekBar.setProgress(currTime/1000);
+					updateVideoTimeTextView(currTime);
+				}
+			});
+		}
+	}
+	
+	/**
+	 * Updates the video time text view with the appropriate numbers
+	 * according to the given time.
+	 * @param currTime - the current time of the video.
+	 */
+	public void updateVideoTimeTextView(int currTime) {
+
+		//If the video is past one hour, show the hour mark
+		if(currTime > 3600000) {
+			mVideoTimeTextView.setText(String.format("%d:%02d:%02d", currTime/3600000, (currTime/60000)%60, (currTime/1000)%60));
+		}
+		//Otherwise save space and don't show hours.
+		else {
+			mVideoTimeTextView.setText(String.format("%d:%02d", currTime/60000, (currTime/1000)%60));
+		}
 	}
 	
 	/**
