@@ -38,7 +38,7 @@ public class VideoFragment extends Fragment {
 	private ImageButton mPlayPauseButton;
 	private SeekBar mVideoSeekBar;
 
-	private int currVideoNum, numVideos, videoLength, clipLength;
+	private int currClipNum, numClips, clipLength, videoLength;
 	private String filePath;
 	
 	private LinearLayout mControllerLayout;
@@ -53,7 +53,7 @@ public class VideoFragment extends Fragment {
 	private ObjectAnimator mShowControllerAnimator;
 	private ObjectAnimator mHideControllerAnimator;
 	
-	public static final String NUM_VIDEOS = "AE01";
+	public static final String NUM_CLIPS = "AE01";
 	public static final String FILE_PATH = "AE02";
 	public static final String VIDEO_LENGTH = "AF02";
 	public static final String CLIP_LENGTH = "BF02";
@@ -73,8 +73,8 @@ public class VideoFragment extends Fragment {
 		mSourceActivity = getActivity();
 
 		//Initialize the video player variables.
-		this.currVideoNum = 0;
-		this.numVideos = getArguments().getInt(NUM_VIDEOS, 0);
+		this.currClipNum = 0;
+		this.numClips = getArguments().getInt(NUM_CLIPS, 0);
 		this.filePath = getArguments().getString(FILE_PATH, "");
 		this.videoLength = getArguments().getInt(VIDEO_LENGTH, 0);
 		this.clipLength = getArguments().getInt(CLIP_LENGTH, 10);
@@ -165,20 +165,34 @@ public class VideoFragment extends Fragment {
 			@Override
 			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 
-				
+				//Make sure we're reacting to changes caused by the user.
+				if(fromUser) {
+					
+					//Updates the current 
+					currClipNum = progress/clipLength;
+					updateVideoPath();
+				}
 
 			}
 
 			@Override
 			public void onStartTrackingTouch(SeekBar seekBar) {
 				//Shows the controller and tells it to not hide.
-				//showController(true);
+				keepControllerShown = true;
+				showController();
+				
+				if(mVideoView.isPlaying()) {
+					mVideoView.pause();
+				}
 			}
 
 			@Override
 			public void onStopTrackingTouch(SeekBar seekBar) {
 				//Shows the controller, but hides it after 2 seconds.
-				//showController(false);
+				keepControllerShown = false;
+				showController();
+				
+				mVideoView.start();
 			}
 		});
 		
@@ -205,10 +219,10 @@ public class VideoFragment extends Fragment {
 	private boolean updateVideoPath() {
 
 		//If this is the last video clip for this video...
-		if(currVideoNum == numVideos) {
+		if(currClipNum == numClips) {
 			
 			//reset the video number counter and return false to not play
-			currVideoNum = 0;
+			currClipNum = 0;
 			mVideoView.setVideoPath(getCurrentVideoFilePath());
 			return false;
 		}
@@ -216,7 +230,7 @@ public class VideoFragment extends Fragment {
 		Log.d(Utils.LOG_TAG, "Setting video path: " + getCurrentVideoFilePath());
 		mVideoView.setVideoPath(getCurrentVideoFilePath());
 
-		currVideoNum++;
+		currClipNum++;
 
 		return true;
 	}
@@ -226,7 +240,7 @@ public class VideoFragment extends Fragment {
 	 * @return - String describing the file location of the next video clip to play.
 	 */
 	private String getCurrentVideoFilePath() {
-		return Environment.getExternalStorageDirectory() + filePath + currVideoNum + ".mp4";
+		return Environment.getExternalStorageDirectory() + filePath + currClipNum + ".mp4";
 	}
 	
 	/**

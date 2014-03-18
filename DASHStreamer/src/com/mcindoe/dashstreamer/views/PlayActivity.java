@@ -22,7 +22,9 @@ public class PlayActivity extends ActionBarActivity {
 		
 			//Create our bundle for our video fragment.
 			Bundle args = new Bundle();
-			args.putInt(VideoFragment.NUM_VIDEOS, 5);
+			args.putInt(VideoFragment.NUM_CLIPS, 5);
+			args.putInt(VideoFragment.CLIP_LENGTH, 10);
+			args.putInt(VideoFragment.VIDEO_LENGTH, 50);
 			args.putString(VideoFragment.FILE_PATH, "/DASHStreamer/bb_10s_");
 
 			//Create our video fragment and add our bundle to it.
