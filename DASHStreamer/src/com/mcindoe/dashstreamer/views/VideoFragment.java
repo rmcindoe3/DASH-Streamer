@@ -9,7 +9,6 @@ import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
-import android.media.MediaPlayer.OnPreparedListener;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.Fragment;
@@ -126,12 +125,6 @@ public class VideoFragment extends Fragment {
 					keepControllerShown = false;
 					showController();
 				}
-				//If the video is not playing right now, then show the 
-				// controller permanently.
-				else {
-					keepControllerShown = true;
-					showController();
-				}
 				return true;
 			}
 			
@@ -145,21 +138,11 @@ public class VideoFragment extends Fragment {
 
 				//If the video is playing, pause it.
 				if(mVideoView.isPlaying()) {
-					mVideoView.pause();
-					mPlayPauseButton.setImageResource(R.drawable.play_icon);
-
-					//shows the controller without a hide timer.
-					keepControllerShown = true;
-					showController();
+					pauseVideo();
 				}
 				//If the video is not playing, play it...
 				else {
-					mVideoView.start();
-					mPlayPauseButton.setImageResource(R.drawable.pause_icon);
-					
-					//Shows the controller but hides it after 2 seconds.
-					keepControllerShown = false;
-					showController();
+					startVideo();
 				}
 					
 			}
@@ -184,49 +167,28 @@ public class VideoFragment extends Fragment {
 
 			@Override
 			public void onStartTrackingTouch(SeekBar seekBar) {
-				//Shows the controller and tells it to not hide.
-				keepControllerShown = true;
-				showController();
 				
-				//If the video is playing, pause it and cancel the seek bar timer.
-				if(mVideoView.isPlaying()) {
-					mVideoView.pause();
-					mSeekBarTimer.cancel();
-				}
+				//pauses the video while the user seeks
+				pauseVideo();
 			}
 
 			@Override
 			public void onStopTrackingTouch(SeekBar seekBar) {
-				//Shows the controller, but hides it after 2 seconds.
-				keepControllerShown = false;
-				showController();
 				
 				//updates the video path with the new clip number and starts the video.
 				updateVideoPath();
-				mVideoView.start();
-				mPlayPauseButton.setImageResource(R.drawable.pause_icon);
 				
-			}
-		});
-		
-		//Sets up our timer for updating the seek bar / time text view.
-		mSeekBarTimer = new Timer();
-		mVideoView.setOnPreparedListener(new OnPreparedListener() {
-
-			@Override
-			public void onPrepared(MediaPlayer mp) {
-				
-				mSeekBarTimer.cancel();
-				mSeekBarTimer = new Timer();
-				mSeekBarTimer.scheduleAtFixedRate(new UpdateVideoUITimerTask(), 0, 1000);
+				//Starts the video where you stopped seeking.
+				startVideo();
 			}
 		});
 		
 		//Setup the video path to the start of the first video.
 		updateVideoPath();
 		
-		//Inits our timer used for controller events.
+		//Inits our timers
 		mControllerTimer = new Timer();
+		mSeekBarTimer = new Timer();
 		
 		//our controller starts in the shown state.
 		mControllerState = SHOWN;
@@ -235,6 +197,53 @@ public class VideoFragment extends Fragment {
 		setupControllerAnimators();
 
 		return rootView;
+	}
+	
+	/**
+	 * Pauses the our currently playing video.
+	 */
+	public void pauseVideo() {
+		
+		//Pauses the video.
+		mVideoView.pause();
+		
+		//Cancels the timer that updates the seek bar
+		mSeekBarTimer.cancel();
+
+		//Changes the play/pause button icon to the play symbol.
+		mPlayPauseButton.setImageResource(R.drawable.play_icon);
+
+		//Shows the controller permanently.
+		keepControllerShown = true;
+		showController();
+	}
+	
+	/**
+	 * Starts our video
+	 */
+	public void startVideo() {
+
+		//Cancels any timer that happens to be running on the our
+		// seek bar timer and then restarts it.
+		mSeekBarTimer.cancel();
+		mSeekBarTimer = new Timer();
+		mSeekBarTimer.scheduleAtFixedRate(new UpdateVideoUITimerTask(), 0, 1000);
+
+		//Starts the video.
+		mVideoView.start();
+
+		//Changes the play/pause button icon to the pause symbol.
+		mPlayPauseButton.setImageResource(R.drawable.pause_icon);
+
+		//Shows the controller, but has it fade away after 2 seconds.
+		keepControllerShown = false;
+		showController();
+	}
+	
+	@Override
+	public void onPause() {
+		super.onPause();
+		pauseVideo();
 	}
 
 	/**
