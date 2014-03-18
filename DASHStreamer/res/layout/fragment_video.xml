@@ -10,6 +10,7 @@
         android:layout_height="match_parent" />
     
     <LinearLayout
+        android:id="@+id/controller_layout"
         android:layout_alignBottom="@id/my_video_view"
         android:background="@color/faded_navigation_button_color"
         android:gravity="center_vertical"
