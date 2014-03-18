@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <color name="bg_color">#FF7582</color>
-    <color name="action_bar_color">#7f141e</color>
-    <color name="navigation_button_color">#7f3a41</color>
-    <color name="faded_navigation_button_color">#887f3a41</color>
+    <color name="bg_color">#CCBBBB</color>
+    <color name="action_bar_color">#a70d1c</color>
+    <color name="navigation_button_color">#c04652</color>
+    <color name="faded_navigation_button_color">#88c04652</color>
+    <color name="white">#FFFFFF</color>
     
 </resources>
