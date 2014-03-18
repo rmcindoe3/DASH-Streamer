@@ -161,7 +161,7 @@ public class VideoFragment extends Fragment implements ClipQueue {
 					
 					//Update the video path and start the new video.
 					updateVideoPath();
-					startVideo();
+					startVideo(false);
 				}
 				
 				//TODO: Delete the video clip "clipToDelete"
@@ -352,7 +352,7 @@ public class VideoFragment extends Fragment implements ClipQueue {
 				updateVideoPath();
 				
 				//Starts playing the video.
-				startVideo();
+				startVideo(true);
 			}
 			break;
 			
@@ -363,7 +363,7 @@ public class VideoFragment extends Fragment implements ClipQueue {
 			mVideoState = PLAYING;
 			
 			//Start the video.
-			startVideo();
+			startVideo(true);
 
 			break;
 			
@@ -390,8 +390,10 @@ public class VideoFragment extends Fragment implements ClipQueue {
 	
 	/**
 	 * Actually starts our video view to play the video.
+	 * @param showController - true if we want to show the controller
+	 * 						  false if we don't want to show the controller
 	 */
-	private void startVideo() {
+	private void startVideo(boolean showController) {
 
 		//Cancels any timer that happens to be running on our
 		// seek bar timer and then restarts it.
@@ -405,9 +407,13 @@ public class VideoFragment extends Fragment implements ClipQueue {
 		//Changes the play/pause button icon to the pause symbol.
 		mPlayPauseButton.setImageResource(R.drawable.pause_icon);
 
-		//Shows the controller, but has it fade away after 2 seconds.
-		keepControllerShown = false;
-		showController();
+		//If we specified we want the controller to be shown as this
+		// video starts, then show the controller for 2 seconds.
+		if(showController) {
+			//Shows the controller, but has it fade away after 2 seconds.
+			keepControllerShown = false;
+			showController();
+		}
 	}
 
 	/**
@@ -449,7 +455,7 @@ public class VideoFragment extends Fragment implements ClipQueue {
 		if(mVideoState == WANTS_TO_PLAY) {
 			mVideoState = PLAYING;
 			updateVideoPath();
-			startVideo();
+			startVideo(true);
 		}
 	}
 	

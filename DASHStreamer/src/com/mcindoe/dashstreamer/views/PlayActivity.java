@@ -5,10 +5,12 @@ import java.util.ArrayList;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import com.mcindoe.dashstreamer.R;
+import com.mcindoe.dashstreamer.controllers.Utils;
 import com.mcindoe.dashstreamer.models.ClipQueue;
 import com.mcindoe.dashstreamer.models.ClipRequestListener;
 import com.mcindoe.dashstreamer.models.VideoClip;
@@ -50,9 +52,14 @@ public class PlayActivity extends ActionBarActivity {
 				@Override
 				public void requestClip(ClipQueue queue, int clipNum) {
 					
+					Log.d(Utils.LOG_TAG, "Clip has been requested: " + clipNum);
 					queue.addClipToQueue(clips.get(clipNum));
 				}
 			});
+			
+			for(int i = 0; i < 5; i++) {
+				vidFrag.addClipToQueue(clips.get(i));
+			}
 
 			//Add the video fragment to our container.
 			getSupportFragmentManager().beginTransaction()
