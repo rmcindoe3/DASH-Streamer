@@ -10,14 +10,17 @@ import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.Window;
+import android.view.WindowManager;
 
 import com.mcindoe.dashstreamer.R;
 import com.mcindoe.dashstreamer.controllers.Utils;
 import com.mcindoe.dashstreamer.models.ClipQueue;
 import com.mcindoe.dashstreamer.models.ClipRequestListener;
 import com.mcindoe.dashstreamer.models.VideoClip;
+import com.mcindoe.dashstreamer.models.VideoControlListener;
 
-public class PlayActivity extends ActionBarActivity {
+public class PlayActivity extends ActionBarActivity implements VideoControlListener {
 	
 	public static final String VIDEO_TITLE = "AE03";
 	
@@ -66,6 +69,7 @@ public class PlayActivity extends ActionBarActivity {
 			}
 			
 			mVideoControlFragment = new VideoControlFragment();
+			mVideoControlFragment.setVideoControlListener(this);
 
 			FragmentManager fm = getSupportFragmentManager();
 
@@ -80,6 +84,10 @@ public class PlayActivity extends ActionBarActivity {
 			ft.add(R.id.control_container, mVideoControlFragment);
 			ft.commit();
 		}
+	}
+
+	@Override
+	public void switchToFullscreen() {
 		
 	}
 
