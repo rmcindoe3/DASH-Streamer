@@ -4,6 +4,8 @@ import java.util.ArrayList;
 
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -20,6 +22,8 @@ public class PlayActivity extends ActionBarActivity {
 	public static final String VIDEO_TITLE = "AE03";
 	
 	private ArrayList<VideoClip> clips;
+	private VideoFragment mVideoFragment;
+	private VideoControlFragment mVideoControlFragment;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -45,9 +49,9 @@ public class PlayActivity extends ActionBarActivity {
 			args.putInt(VideoFragment.VIDEO_LENGTH, 50);
 
 			//Create our video fragment and add our bundle to it.
-			VideoFragment vidFrag = new VideoFragment();
-			vidFrag.setArguments(args);
-			vidFrag.setClipRequestListener(new ClipRequestListener() {
+			mVideoFragment = new VideoFragment();
+			mVideoFragment.setArguments(args);
+			mVideoFragment.setClipRequestListener(new ClipRequestListener() {
 
 				@Override
 				public void requestClip(ClipQueue queue, int clipNum) {
@@ -58,12 +62,23 @@ public class PlayActivity extends ActionBarActivity {
 			});
 			
 			for(int i = 0; i < 5; i++) {
-				vidFrag.addClipToQueue(clips.get(i));
+				mVideoFragment.addClipToQueue(clips.get(i));
 			}
+			
+			mVideoControlFragment = new VideoControlFragment();
+
+			FragmentManager fm = getSupportFragmentManager();
 
 			//Add the video fragment to our container.
-			getSupportFragmentManager().beginTransaction()
-					.add(R.id.container, vidFrag).commit();
+			FragmentTransaction ft = fm.beginTransaction();
+			ft.add(R.id.video_container, mVideoFragment);
+			ft.commit();
+
+			//Add the video control fragment to our container.
+			ft = fm.beginTransaction();
+			ft.setCustomAnimations(R.animator.rising_fade_in, 0);
+			ft.add(R.id.control_container, mVideoControlFragment);
+			ft.commit();
 		}
 		
 	}
@@ -86,6 +101,13 @@ public class PlayActivity extends ActionBarActivity {
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
+	}
+
+	@Override
+	public void onBackPressed() {
+		super.onBackPressed();
+		//Mirrors our activity entrance animation.
+		overridePendingTransition(R.animator.enter_previous_activity, R.animator.exit_next_activity);
 	}
 
 }

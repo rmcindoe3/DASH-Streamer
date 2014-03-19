@@ -16,11 +16,13 @@
 
         <activity
             android:name="com.mcindoe.dashstreamer.views.PlayActivity"
+            android:screenOrientation="portrait"
             android:label="@string/title_activity_play" >
         </activity>
 
         <activity
             android:name="com.mcindoe.dashstreamer.views.MainActivity"
+            android:screenOrientation="portrait"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

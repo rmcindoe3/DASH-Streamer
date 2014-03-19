@@ -36,6 +36,7 @@ public class MainActivityControlFragment extends Fragment {
 				Intent intent = new Intent(mFragment.getActivity(), PlayActivity.class);
 				intent.putExtra(PlayActivity.VIDEO_TITLE, "Breaking Bad S05E13");
 				startActivityForResult(intent, 0);
+				mFragment.getActivity().overridePendingTransition(R.animator.enter_next_activity, R.animator.exit_current_activity);
 			}
 		});
 
