@@ -1,4 +1,5 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/play_activity"
     xmlns:tools="http://schemas.android.com/tools"
     android:background="@color/bg_color"
     android:layout_width="match_parent"
@@ -10,7 +11,7 @@
     <FrameLayout 
     	android:id="@+id/video_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="200dp" />
     
     <FrameLayout 
         android:id="@+id/control_container"

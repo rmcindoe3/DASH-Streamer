@@ -11,6 +11,7 @@ import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
+import android.media.MediaPlayer.OnPreparedListener;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -32,6 +33,7 @@ import com.mcindoe.dashstreamer.controllers.Utils;
 import com.mcindoe.dashstreamer.models.ClipQueue;
 import com.mcindoe.dashstreamer.models.ClipRequestListener;
 import com.mcindoe.dashstreamer.models.VideoClip;
+import com.mcindoe.dashstreamer.models.VideoControlListener;
 
 
 /**
@@ -63,6 +65,14 @@ public class VideoFragment extends Fragment implements ClipQueue {
 	private ClipRequestListener mClipRequestListener;
 	private ClipQueue mClipQueue;
 	
+	//Allows us to let to source activity know when the video has been loaded.
+	private VideoControlListener mVideoControlListener;
+	
+	//Some variables for managing the fragment lifecycle.
+	private boolean videoInterrupted, startVideoOnResume;
+	private int interruptPosition;
+	private static final int DONT_SEEK = -1;
+	
 	//Variables for our video controller.
 	private static final int SHOWN = 1, HIDING = 2, HIDDEN = 3, SHOWING = 4;
 	private int mControllerState;
@@ -88,11 +98,11 @@ public class VideoFragment extends Fragment implements ClipQueue {
 		//our controller starts in the shown state.
 		mControllerState = SHOWN;
 		
-		//Initialize our clips to play queue as a linked list.
-		clipsToPlay = new LinkedList<VideoClip>();
-		
 		//Our video starts in the not playing state.
 		mVideoState = NOT_PLAYING;
+		
+		//Initialize our clips to play queue as a linked list.
+		clipsToPlay = new LinkedList<VideoClip>();
 		
 		//So we can reference our clip queue when working in other classes.
 		mClipQueue = this;
@@ -101,12 +111,12 @@ public class VideoFragment extends Fragment implements ClipQueue {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
+		
+		//Retain the instance of this video fragment when a config change happens
+		setRetainInstance(true);
 
 		//Inflate our view from the xml file.
 		View rootView = inflater.inflate(R.layout.fragment_video, container, false);
-		
-		//Grabs the source activity, used to run hideController on the UI thread in timertask runnables
-		mSourceActivity = getActivity();
 
 		//Initialize the video player variables.
 		this.numClips = getArguments().getInt(NUM_CLIPS, 0);
@@ -141,6 +151,12 @@ public class VideoFragment extends Fragment implements ClipQueue {
 
 					//Set the play/pause button icon to the play image.
 					mPlayPauseButton.setImageResource(R.drawable.play_icon);
+					
+					//Reset the current clip number back to zero.
+					currClipNum = 0;
+					
+					//cancel our seekbar update timer.
+					mSeekBarTimer.cancel();
 				}
 				//If we weren't at the end of the video, but there are no clips ready to play.
 				else if(clipsToPlay.isEmpty()) {
@@ -148,7 +164,7 @@ public class VideoFragment extends Fragment implements ClipQueue {
 					//Set the state of the video to show we want to play, but can't.
 					mVideoState = WANTS_TO_PLAY;
 					
-					//Request the next clip, if possible.
+					//Request the next clip.
 					if(mClipRequestListener != null) {
 						mClipRequestListener.requestClip(mClipQueue, clipToDelete.getClipNum() + 1);
 					}
@@ -161,7 +177,7 @@ public class VideoFragment extends Fragment implements ClipQueue {
 					
 					//Update the video path and start the new video.
 					updateVideoPath();
-					startVideo(false);
+					startVideo(DONT_SEEK, false);
 				}
 				
 				//TODO: Delete the video clip "clipToDelete"
@@ -205,7 +221,7 @@ public class VideoFragment extends Fragment implements ClipQueue {
 		});
 		
 		//Set the max value of the seek bar to the length of the video in seconds.
-		mVideoSeekBar.setMax(videoLength);
+		mVideoSeekBar.setMax(videoLength - 1);
 		mVideoSeekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
 			
 			private int origClipNum;
@@ -339,7 +355,7 @@ public class VideoFragment extends Fragment implements ClipQueue {
 
 				//Make a request to our clip request listener.
 				if(mClipRequestListener != null) {
-					mClipRequestListener.requestClip(mClipQueue, 0);
+					mClipRequestListener.requestClip(mClipQueue, currClipNum);
 				}
 			}
 			//If we have clips to play.
@@ -352,7 +368,7 @@ public class VideoFragment extends Fragment implements ClipQueue {
 				updateVideoPath();
 				
 				//Starts playing the video.
-				startVideo(true);
+				startVideo(DONT_SEEK, true);
 			}
 			break;
 			
@@ -363,7 +379,7 @@ public class VideoFragment extends Fragment implements ClipQueue {
 			mVideoState = PLAYING;
 			
 			//Start the video.
-			startVideo(true);
+			startVideo(DONT_SEEK, true);
 
 			break;
 			
@@ -380,26 +396,106 @@ public class VideoFragment extends Fragment implements ClipQueue {
 	}
 	
 	/**
+	 * Override the default onResume function to include resuming our video
+	 */
+	@Override
+	public void onResume() {
+		super.onResume();
+
+		//If we're resuming from an interrupted video
+		if(videoInterrupted) {
+			
+			//Make sure we reload the media player in case it was used elsewhere.
+			updateVideoPath();
+			
+			//Start the video if we exited in a state that desires that.
+			if(startVideoOnResume) {
+				mVideoState = PLAYING;
+				startVideo(interruptPosition, true);
+			}
+			//Else pause the video and seek it to the position it was interrupted at.
+			else {
+				mVideoState = PAUSED;
+				mVideoView.seekTo(interruptPosition);
+			}
+
+			//Calculates the current time of the video according to cliplength, current
+			// clip number and the current position in the clip that is playing...
+			int currTime = clipLength*1000*currClipNum + interruptPosition;
+
+			//Update the progress bar and video time text view with the new time.
+			mVideoSeekBar.setProgress(currTime/1000);
+			updateVideoTimeTextView(currTime);
+		}
+
+		//Reset our interrupted boolean to false.
+		videoInterrupted = false;
+	}
+	
+	/**
 	 * Override the default onPause function to include pausing our video
 	 */
 	@Override
 	public void onPause() {
 		super.onPause();
-		pauseVideo();
+		
+		switch(mVideoState) {
+
+		//If we were in the middle of playing the video when the fragment pauses...
+		case PLAYING:
+			
+			//Set our video state variables and pause the video.
+			videoInterrupted = true;
+			startVideoOnResume = true;
+			interruptPosition = mVideoView.getCurrentPosition();
+			pauseVideo();
+			break;
+			
+		//If we were in the middle of the video, but paused when the fragment pauses...
+		case PAUSED:
+			
+			//Set our video state variables and pause the video.
+			videoInterrupted = true;
+			startVideoOnResume = false;
+			interruptPosition = mVideoView.getCurrentPosition();
+			pauseVideo();
+			break;
+			
+		//If we're currently waiting on clips, just pause the video.
+		case WANTS_TO_PLAY:
+			pauseVideo();
+			break;
+		}
 	}
 	
 	/**
 	 * Actually starts our video view to play the video.
+	 * @param position - the position we want to start the video at.
 	 * @param showController - true if we want to show the controller
 	 * 						  false if we don't want to show the controller
 	 */
-	private void startVideo(boolean showController) {
+	private void startVideo(int position, boolean showController) {
+
 
 		//Cancels any timer that happens to be running on our
 		// seek bar timer and then restarts it.
 		mSeekBarTimer.cancel();
 		mSeekBarTimer = new Timer();
-		mSeekBarTimer.scheduleAtFixedRate(new UpdateVideoUITimerTask(), 0, 1000);
+
+		//Seeks to the specified position in the video.
+		if(position != DONT_SEEK) {
+			mVideoView.seekTo(position);
+			
+			//If we're seeking to a position, wait one second before updating the UI.
+			// this is because the video won't have loaded yet and it will update to the wrong time
+			// if this task is executed immediately.
+			mSeekBarTimer.scheduleAtFixedRate(new UpdateVideoUITimerTask(), 1000, 1000);
+		}
+		else {
+			//If we're not seeking, start updating the UI immediately because it will load
+			// the correc time from the start.
+			mSeekBarTimer.scheduleAtFixedRate(new UpdateVideoUITimerTask(), 0, 1000);
+		}
 
 		//Starts the video.
 		mVideoView.start();
@@ -430,15 +526,11 @@ public class VideoFragment extends Fragment implements ClipQueue {
 		//Sets the filepath of our videoview accordingly.
 		Log.d(Utils.LOG_TAG, "Setting video path: " + clip.getFilePath());
 		mVideoView.setVideoPath(clip.getFilePath());
-
-	}
-	
-	/**
-	 * This is what we use to request clips to be added to our clip queue
-	 * @param crl - the request listener we can send reqeusts to.
-	 */
-	public void setClipRequestListener(ClipRequestListener crl) {
-		this.mClipRequestListener = crl;
+		
+		//Tell our listener that the video has been loaded.
+		if(mVideoControlListener != null) {
+			mVideoControlListener.videoLoaded();
+		}
 	}
 
 	/**
@@ -455,7 +547,7 @@ public class VideoFragment extends Fragment implements ClipQueue {
 		if(mVideoState == WANTS_TO_PLAY) {
 			mVideoState = PLAYING;
 			updateVideoPath();
-			startVideo(true);
+			startVideo(DONT_SEEK, true);
 		}
 	}
 	
@@ -641,5 +733,30 @@ public class VideoFragment extends Fragment implements ClipQueue {
 			public void onAnimationRepeat(Animator animation) {
 			}
 		});
+	}
+
+	@Override
+	public void onAttach(Activity activity) {
+		super.onAttach(activity);
+		
+		//Creates our listeners to the attached activity.
+		mVideoControlListener = (PlayActivity)activity;
+		mClipRequestListener = (PlayActivity)activity;
+		
+		//Grabs the source activity, used to run hideController() on the UI thread in timertask runnables
+		mSourceActivity = activity;
+	}
+
+	@Override
+	public void onDetach() {
+		super.onDetach();
+		
+		//Cancels our controller timer on the chance it was running when this fragment detaches.
+		mControllerTimer.cancel();
+		
+		//Removes all references to the previously attached activity.
+		mVideoControlListener = null;
+		mClipRequestListener = null;
+		mSourceActivity = null;
 	}
 }

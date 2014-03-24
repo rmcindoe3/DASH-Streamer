@@ -1,5 +1,6 @@
 package com.mcindoe.dashstreamer.views;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -23,6 +24,9 @@ public class VideoControlFragment extends Fragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
+		
+		//Retain the instance of this video fragment when a config change happens
+		setRetainInstance(true);
 
 		//Inflate our view from the xml file.
 		View rootView = inflater.inflate(R.layout.fragment_video_control, container, false);
@@ -42,10 +46,20 @@ public class VideoControlFragment extends Fragment {
 
 		return rootView;
 	}
-	
-	public void setVideoControlListener(VideoControlListener vcl) {
-		this.mVideoControlListener = vcl;
-	}
-	
 
+	@Override
+	public void onAttach(Activity activity) {
+		super.onAttach(activity);
+
+		//Sets our video control listener to the attached activity.
+		mVideoControlListener = (PlayActivity)activity;
+	}
+
+	@Override
+	public void onDetach() {
+		super.onDetach();
+		
+		//removes reference to previously attached activity.
+		mVideoControlListener = null;
+	}
 }
