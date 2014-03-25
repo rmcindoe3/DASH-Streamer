@@ -4,24 +4,16 @@ import java.util.ArrayList;
 
 public class AdaptationSet {
 
-	private String contentDescriptor;
+	private String name;
 	private ArrayList<Representation> representations;
 	
-	public AdaptationSet(String contentDescriptor) {
-		setContentDescriptor(contentDescriptor);
+	public AdaptationSet(String name) {
+		setName(name);
 		setRepresentations(new ArrayList<Representation>());
 	}
 	
 	public void addRepresentation(Representation rep) {
 		representations.add(rep);
-	}
-
-	public String getContentDescriptor() {
-		return contentDescriptor;
-	}
-
-	public void setContentDescriptor(String contentDescriptor) {
-		this.contentDescriptor = contentDescriptor;
 	}
 
 	public ArrayList<Representation> getRepresentations() {
@@ -30,5 +22,13 @@ public class AdaptationSet {
 
 	public void setRepresentations(ArrayList<Representation> representations) {
 		this.representations = representations;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 }

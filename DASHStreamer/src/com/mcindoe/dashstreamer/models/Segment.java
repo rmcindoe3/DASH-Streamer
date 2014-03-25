@@ -2,29 +2,27 @@ package com.mcindoe.dashstreamer.models;
 
 public class Segment {
 	
-	private int length;
-	private String videoURL;
+	private int id;
+	private String url;
 	
-	public Segment(String videoURL, int length) {
-		
-		setLength(length);
-		setVideoURL(videoURL);
+	public Segment(String url, int id) {
+		setUrl(url);
+		setId(id);
 	}
 
-	public int getLength() {
-		return length;
+	public int getId() {
+		return id;
 	}
 
-	public void setLength(int length) {
-		this.length = length;
+	public void setId(int id) {
+		this.id = id;
 	}
 
-	public String getVideoURL() {
-		return videoURL;
+	public String getUrl() {
+		return url;
 	}
 
-	public void setVideoURL(String videoURL) {
-		this.videoURL = videoURL;
+	public void setUrl(String url) {
+		this.url = url;
 	}
-
 }
