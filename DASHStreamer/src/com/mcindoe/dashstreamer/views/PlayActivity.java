@@ -16,7 +16,6 @@ import com.mcindoe.dashstreamer.R;
 import com.mcindoe.dashstreamer.controllers.DASHManager;
 import com.mcindoe.dashstreamer.controllers.DASHStreamerApplication;
 import com.mcindoe.dashstreamer.controllers.Utils;
-import com.mcindoe.dashstreamer.models.ClipQueue;
 import com.mcindoe.dashstreamer.models.ClipRequestListener;
 import com.mcindoe.dashstreamer.models.MediaPresentation;
 import com.mcindoe.dashstreamer.models.VideoControlListener;
@@ -152,8 +151,9 @@ public class PlayActivity extends ActionBarActivity implements VideoControlListe
 	 * waiting on a clip to be added to it's queue.
 	 */
 	@Override
-	public void requestClip(ClipQueue queue, int clipNum) {
+	public void requestClip(int clipNum) {
 
+		mDASHManager.setCurrentClipNum(clipNum);
 	}
 
 	/**

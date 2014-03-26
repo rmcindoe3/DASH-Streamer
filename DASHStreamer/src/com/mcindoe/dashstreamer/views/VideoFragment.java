@@ -1,6 +1,5 @@
 package com.mcindoe.dashstreamer.views;
 
-import java.io.File;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Timer;
@@ -12,7 +11,6 @@ import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -30,6 +28,7 @@ import android.widget.TextView;
 import android.widget.VideoView;
 
 import com.mcindoe.dashstreamer.R;
+import com.mcindoe.dashstreamer.controllers.DeleteFileTask;
 import com.mcindoe.dashstreamer.controllers.Utils;
 import com.mcindoe.dashstreamer.models.ClipQueue;
 import com.mcindoe.dashstreamer.models.ClipRequestListener;
@@ -66,7 +65,6 @@ public class VideoFragment extends Fragment implements ClipQueue {
 	
 	//Our listener for clip requests.
 	private ClipRequestListener mClipRequestListener;
-	private ClipQueue mClipQueue;
 	
 	//Allows us to let to source activity know when the video has been loaded.
 	private VideoControlListener mVideoControlListener;
@@ -106,9 +104,6 @@ public class VideoFragment extends Fragment implements ClipQueue {
 		
 		//Initialize our clips to play queue as a linked list.
 		clipsToPlay = new LinkedList<VideoClip>();
-		
-		//So we can reference our clip queue when working in other classes.
-		mClipQueue = this;
 	}
 
 	@Override
@@ -169,7 +164,7 @@ public class VideoFragment extends Fragment implements ClipQueue {
 					
 					//Request the next clip.
 					if(mClipRequestListener != null) {
-						mClipRequestListener.requestClip(mClipQueue, clipToDelete.getClipNum() + 1);
+						mClipRequestListener.requestClip(clipToDelete.getClipNum() + 1);
 					}
 				}
 				//If we weren't at the end of the video and there are clips ready to play.
@@ -278,7 +273,7 @@ public class VideoFragment extends Fragment implements ClipQueue {
 					
 					//Request the selected clip.
 					if(mClipRequestListener != null) {
-						mClipRequestListener.requestClip(mClipQueue, currClipNum);
+						mClipRequestListener.requestClip(currClipNum);
 					}
 				}
 			}
@@ -358,7 +353,7 @@ public class VideoFragment extends Fragment implements ClipQueue {
 
 				//Make a request to our clip request listener.
 				if(mClipRequestListener != null) {
-					mClipRequestListener.requestClip(mClipQueue, currClipNum);
+					mClipRequestListener.requestClip(currClipNum);
 				}
 			}
 			//If we have clips to play.
@@ -786,7 +781,7 @@ public class VideoFragment extends Fragment implements ClipQueue {
 	public void clear() {
 		
 		while(!clipsToPlay.isEmpty()) {
-			(new DeleteClipTask()).execute(clipsToPlay.poll().getFilePath());
+			(new DeleteFileTask()).execute(clipsToPlay.poll().getFilePath());
 		}
 	}
 	
@@ -795,19 +790,6 @@ public class VideoFragment extends Fragment implements ClipQueue {
 	 * @param clip - the clip to delete.
 	 */
 	public void deleteClip(VideoClip clip) {
-		(new DeleteClipTask()).execute(clip.getFilePath());
-	}
-	
-	private class DeleteClipTask extends AsyncTask<String, Integer, Void> {
-
-		@Override
-		protected Void doInBackground(String... params) {
-
-			File clip = new File(params[0]);
-			clip.delete();
-
-			return null;
-		}
-		
+		(new DeleteFileTask()).execute(clip.getFilePath());
 	}
 }

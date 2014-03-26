@@ -13,7 +13,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.util.EntityUtils;
 
 import android.os.AsyncTask;
 import android.os.Environment;
@@ -69,6 +68,32 @@ public class DASHManager {
 		requestCurrentSegment();
 	}
 	
+	public void setCurrentClipNum(int clipNum) {
+		
+		//Cancel anything currently downloading and clear
+		// what we have in the queue already.
+		cancelCurrentDownload();
+		mClipQueue.clear();
+		
+		//Updates the current segment number and then requests it.
+		mCurrSegmentNum = clipNum;
+		requestCurrentSegment();
+	}
+	
+	/**
+	 * Cancels the current clip download and deletes anythign that may have
+	 * been saved to the sdcard.
+	 */
+	public void cancelCurrentDownload() {
+		
+		mDownloadClipTask.cancel(true);
+		String tempFile = mDownloadClipTask.getFilepath();
+		
+		if(tempFile != null) {
+			(new DeleteFileTask()).execute(tempFile);
+		}
+	}
+	
 	/**
 	 * Requests the next segment from the server.
 	 */
@@ -92,6 +117,8 @@ public class DASHManager {
 	 * video clip folder as the given filename.
 	 */
 	private class DownloadClipTask extends AsyncTask<String, Integer, Long> {
+		
+		private String filepath;
 
 		/**
 		 * params[0] : Should be the URL of the video clip file.
@@ -127,6 +154,8 @@ public class DASHManager {
 				
 				//Create our file output stream to the downloads folder with the given name.
 				outputStream = new FileOutputStream(new File(DOWNLOAD_FOLDER + params[1]));
+				
+				filepath = DOWNLOAD_FOLDER + params[1];
 				
 				//Set up some buffers and variables for writing the file.
 				int read = 0;
@@ -192,6 +221,10 @@ public class DASHManager {
 			else {
 				Log.d(Utils.LOG_TAG, "Download of media segment failed");
 			}
+		}
+		
+		public String getFilepath() {
+			return filepath;
 		}
 		
 	}
