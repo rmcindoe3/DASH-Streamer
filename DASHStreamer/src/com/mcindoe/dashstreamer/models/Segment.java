@@ -1,5 +1,9 @@
 package com.mcindoe.dashstreamer.models;
 
+import android.util.Log;
+
+import com.mcindoe.dashstreamer.controllers.Utils;
+
 public class Segment {
 	
 	private int id;
@@ -8,6 +12,11 @@ public class Segment {
 	public Segment(String url, int id) {
 		setUrl(url);
 		setId(id);
+	}
+	
+	public void printInfoToLog() {
+
+		Log.d(Utils.LOG_TAG, "Segment: Id: " + id + ", URL: " + url);
 	}
 
 	public int getId() {

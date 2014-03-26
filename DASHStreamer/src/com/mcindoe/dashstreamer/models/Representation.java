@@ -2,6 +2,10 @@ package com.mcindoe.dashstreamer.models;
 
 import java.util.ArrayList;
 
+import android.util.Log;
+
+import com.mcindoe.dashstreamer.controllers.Utils;
+
 public class Representation {
 	
 	private String name, folder;
@@ -15,6 +19,19 @@ public class Representation {
 		setBitrate(bitrate);
 		setSegmentLength(segmentLength);
 		setSegments(new ArrayList<Segment>());
+	}
+	
+	public void printInfoToLog() {
+
+		Log.d(Utils.LOG_TAG, "Representation");
+		Log.d(Utils.LOG_TAG, "Name: " + name);
+		Log.d(Utils.LOG_TAG, "Folder: " + folder);
+		Log.d(Utils.LOG_TAG, "Bitrate: " + bitrate);
+		Log.d(Utils.LOG_TAG, "Segment Length: " + segmentLength);
+		
+		for(int i = 0; i < segments.size(); i++) {
+			segments.get(i).printInfoToLog();
+		}
 	}
 	
 	public void addSegment(Segment seg) {

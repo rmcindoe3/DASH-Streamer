@@ -16,7 +16,6 @@ public class MainActivityControlFragment extends Fragment {
 	private Fragment mFragment;
 
 	public MainActivityControlFragment() {
-		
 		mFragment = this;
 	}
 

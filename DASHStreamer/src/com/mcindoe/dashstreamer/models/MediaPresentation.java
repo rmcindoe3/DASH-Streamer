@@ -2,6 +2,10 @@ package com.mcindoe.dashstreamer.models;
 
 import java.util.ArrayList;
 
+import android.util.Log;
+
+import com.mcindoe.dashstreamer.controllers.Utils;
+
 public class MediaPresentation {
 	
 	private String name, baseUrl;
@@ -13,6 +17,18 @@ public class MediaPresentation {
 		setBaseUrl(baseUrl);
 		setDuration(duration);
 		setPeriods(new ArrayList<Period>());
+	}
+	
+	public void printInfoToLog() {
+
+		Log.d(Utils.LOG_TAG, "MPD");
+		Log.d(Utils.LOG_TAG, "Name: " + name);
+		Log.d(Utils.LOG_TAG, "Base URL: " + baseUrl);
+		Log.d(Utils.LOG_TAG, "Duration: " + duration);
+		
+		for(int i = 0; i < periods.size(); i++) {
+			periods.get(i).printInfoToLog();
+		}
 	}
 	
 	public void addPeriod(Period per) {
