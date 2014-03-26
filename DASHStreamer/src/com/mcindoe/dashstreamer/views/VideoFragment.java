@@ -1,5 +1,6 @@
 package com.mcindoe.dashstreamer.views;
 
+import java.io.File;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Timer;
@@ -11,7 +12,7 @@ import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
-import android.media.MediaPlayer.OnPreparedListener;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -181,8 +182,8 @@ public class VideoFragment extends Fragment implements ClipQueue {
 					updateVideoPath();
 					startVideo(DONT_SEEK, false);
 				}
-				
-				//TODO: Delete the video clip "clipToDelete"
+
+				deleteClip(clipToDelete);
 			}
 		});
 		
@@ -518,17 +519,17 @@ public class VideoFragment extends Fragment implements ClipQueue {
 	 * Updates the video path of our Video View to the next video clip.
 	 */
 	private void updateVideoPath() {
-		
+
 		//Peeks at the clip at the top of our play list.
 		VideoClip clip = clipsToPlay.peek();
-		
+
 		//Sets the current clip number accordingly.
 		currClipNum = clip.getClipNum();
 
 		//Sets the filepath of our videoview accordingly.
 		Log.d(Utils.LOG_TAG, "Setting video path: " + clip.getFilePath());
 		mVideoView.setVideoPath(clip.getFilePath());
-		
+
 		//Tell our listener that the video has been loaded.
 		if(mVideoControlListener != null) {
 			mVideoControlListener.videoLoaded();
@@ -761,14 +762,52 @@ public class VideoFragment extends Fragment implements ClipQueue {
 		mClipRequestListener = null;
 		mSourceActivity = null;
 	}
+	
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
 
+		//Clears any remaining video clips off the sdcard.
+		clear();
+	}
+
+	/**
+	 * Checks to see if there is still room in our clipstoplay buffer
+	 */
 	@Override
 	public boolean hasRoom() {
-		if(clipsToPlay.size() < MAX_CLIPS_BUFFERED) {
-			return true;
+		return (clipsToPlay.size() < MAX_CLIPS_BUFFERED);
+	}
+
+	/**
+	 * Empties the Clip Queue and frees up the space from the hard drive.
+	 */
+	@Override
+	public void clear() {
+		
+		while(!clipsToPlay.isEmpty()) {
+			(new DeleteClipTask()).execute(clipsToPlay.poll().getFilePath());
 		}
-		else {
-			return false;
+	}
+	
+	/**
+	 * Deletes the given clip off the sdcard.
+	 * @param clip - the clip to delete.
+	 */
+	public void deleteClip(VideoClip clip) {
+		(new DeleteClipTask()).execute(clip.getFilePath());
+	}
+	
+	private class DeleteClipTask extends AsyncTask<String, Integer, Void> {
+
+		@Override
+		protected Void doInBackground(String... params) {
+
+			File clip = new File(params[0]);
+			clip.delete();
+
+			return null;
 		}
+		
 	}
 }
