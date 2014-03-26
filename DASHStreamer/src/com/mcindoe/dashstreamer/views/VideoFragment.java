@@ -40,6 +40,8 @@ import com.mcindoe.dashstreamer.models.VideoControlListener;
  * A placeholder fragment containing a simple view.
  */
 public class VideoFragment extends Fragment implements ClipQueue {
+	
+	private final static int MAX_CLIPS_BUFFERED = 6;
 
 	//UI Elements from our layout xml
 	private VideoView mVideoView;
@@ -758,5 +760,15 @@ public class VideoFragment extends Fragment implements ClipQueue {
 		mVideoControlListener = null;
 		mClipRequestListener = null;
 		mSourceActivity = null;
+	}
+
+	@Override
+	public boolean hasRoom() {
+		if(clipsToPlay.size() < MAX_CLIPS_BUFFERED) {
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 }

@@ -6,6 +6,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.mcindoe.dashstreamer.R;
+import com.mcindoe.dashstreamer.controllers.DASHManager;
 
 public class MainActivity extends ActionBarActivity {
 

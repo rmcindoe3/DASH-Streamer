@@ -1,5 +1,7 @@
 package com.mcindoe.dashstreamer.views;
 
+import java.util.ArrayList;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -10,6 +12,10 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 import com.mcindoe.dashstreamer.R;
+import com.mcindoe.dashstreamer.controllers.DASHStreamerApplication;
+import com.mcindoe.dashstreamer.controllers.MPDParser;
+import com.mcindoe.dashstreamer.controllers.MPDParser.MPDLoadedListener;
+import com.mcindoe.dashstreamer.models.MediaPresentation;
 
 public class MainActivityControlFragment extends Fragment {
 	
@@ -32,10 +38,18 @@ public class MainActivityControlFragment extends Fragment {
 			@Override
 			public void onClick(View v) {
 
-				Intent intent = new Intent(mFragment.getActivity(), PlayActivity.class);
-				intent.putExtra(PlayActivity.VIDEO_TITLE, "Breaking Bad S05E13");
-				startActivityForResult(intent, 0);
-				mFragment.getActivity().overridePendingTransition(R.animator.enter_next_activity, R.animator.exit_current_activity);
+				new MPDParser("http://10.0.0.3:4573/MPDs/bb_s05_e13_mpd.xml", new MPDLoadedListener() {
+
+					@Override
+					public void onMediaPresentationsLoaded(ArrayList<MediaPresentation> mpds) {
+
+						((DASHStreamerApplication)mFragment.getActivity().getApplication()).setCurrentMediaPresentation(mpds.get(0));
+
+						Intent intent = new Intent(mFragment.getActivity(), PlayActivity.class);
+						startActivityForResult(intent, 0);
+						mFragment.getActivity().overridePendingTransition(R.animator.enter_next_activity, R.animator.exit_current_activity);
+					}
+				});
 			}
 		});
 

@@ -82,6 +82,7 @@ public class MPDParser {
 			MediaPresentation mediaPresentation = new MediaPresentation(
 					getAttr(NAME, mpdList.item(i)),
 					getAttr(BASE_URL, mpdList.item(i)),
+					Integer.parseInt(getAttr(SEGMENT_LENGTH, mpdList.item(i))),
 					Integer.parseInt(getAttr(DURATION, mpdList.item(i))));
 			
 			mediaPresentation.setPeriods(parsePeriods(mpdList.item(i)));
@@ -160,8 +161,7 @@ public class MPDParser {
 			Representation representation = new Representation(
 					getAttr(NAME, representationList.item(i)),
 					getAttr(FOLDER, representationList.item(i)),
-					Integer.parseInt(getAttr(BITRATE, representationList.item(i))),
-					Integer.parseInt(getAttr(SEGMENT_LENGTH, representationList.item(i))));
+					Integer.parseInt(getAttr(BITRATE, representationList.item(i))));
 			
 			representation.setSegments(parseSegments(representationList.item(i)));
 			
