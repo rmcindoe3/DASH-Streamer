@@ -72,7 +72,10 @@ public class VideoFragment extends Fragment implements ClipQueue {
 	//Some variables for managing the fragment lifecycle.
 	private boolean videoInterrupted, startVideoOnResume;
 	private int interruptPosition;
-	private static final int DONT_SEEK = -1;
+	
+	//Some variables for seeking to the middle of a clip.
+	private int seekPosition;
+	private boolean seekOnStart;
 	
 	//Variables for our video controller.
 	private static final int SHOWN = 1, HIDING = 2, HIDDEN = 3, SHOWING = 4;
@@ -175,7 +178,7 @@ public class VideoFragment extends Fragment implements ClipQueue {
 					
 					//Update the video path and start the new video.
 					updateVideoPath();
-					startVideo(DONT_SEEK, false);
+					startVideo(false);
 				}
 
 				deleteClip(clipToDelete);
@@ -251,8 +254,18 @@ public class VideoFragment extends Fragment implements ClipQueue {
 			@Override
 			public void onStopTrackingTouch(SeekBar seekBar) {
 				
-				//If we didn't change clips, then just start the clip over.
-				if(currClipNum == origClipNum) {
+				//Tells our video where to seek to when it starts.
+				prepareSeek((seekBar.getProgress()%clipLength)*1000);
+				
+				//If we changed to a clip we already have loaded then
+				// we don't need to make a new request, we can just move ahead that
+				// amount of clips.
+				if(currClipNum >= origClipNum && currClipNum < origClipNum + clipsToPlay.size()) {
+					
+					//pops and deletes the right number of clips from our queue.
+					for(int i = 0; i < (currClipNum-origClipNum); i++) {
+						deleteClip(clipsToPlay.poll());
+					}
 
 					//updates the video path with the new clip number and starts the video.
 					updateVideoPath();
@@ -260,16 +273,11 @@ public class VideoFragment extends Fragment implements ClipQueue {
 					//Starts the video where you stopped seeking.
 					playVideo();
 				}
-				//TODO: if currClipNum <= origClipNum + clipsToPlay.size(), then
-				//		we don't have to re-request - OPTIMIZATION.
-				//If the clip selected is not the clip we have already.
+				//If the clip selected is not one of the clips we have already.
 				else {
 					
 					//We're changing to a want to play state.
 					mVideoState = WANTS_TO_PLAY;
-					
-					//Empty our clip queue.
-					clipsToPlay.clear();
 					
 					//Request the selected clip.
 					if(mClipRequestListener != null) {
@@ -366,7 +374,7 @@ public class VideoFragment extends Fragment implements ClipQueue {
 				updateVideoPath();
 				
 				//Starts playing the video.
-				startVideo(DONT_SEEK, true);
+				startVideo(true);
 			}
 			break;
 			
@@ -377,7 +385,7 @@ public class VideoFragment extends Fragment implements ClipQueue {
 			mVideoState = PLAYING;
 			
 			//Start the video.
-			startVideo(DONT_SEEK, true);
+			startVideo(true);
 
 			break;
 			
@@ -405,16 +413,18 @@ public class VideoFragment extends Fragment implements ClipQueue {
 			
 			//Make sure we reload the media player in case it was used elsewhere.
 			updateVideoPath();
+
+			//Prepares the video to seek to the given position when starting.
+			prepareSeek(interruptPosition);
 			
 			//Start the video if we exited in a state that desires that.
 			if(startVideoOnResume) {
 				mVideoState = PLAYING;
-				startVideo(interruptPosition, true);
+				startVideo(true);
 			}
 			//Else pause the video and seek it to the position it was interrupted at.
 			else {
 				mVideoState = PAUSED;
-				mVideoView.seekTo(interruptPosition);
 			}
 
 			//Calculates the current time of the video according to cliplength, current
@@ -472,26 +482,27 @@ public class VideoFragment extends Fragment implements ClipQueue {
 	 * @param showController - true if we want to show the controller
 	 * 						  false if we don't want to show the controller
 	 */
-	private void startVideo(int position, boolean showController) {
+	private void startVideo(boolean showController) {
 
 
 		//Cancels any timer that happens to be running on our
 		// seek bar timer and then restarts it.
 		mSeekBarTimer.cancel();
 		mSeekBarTimer = new Timer();
+		
+		if(seekOnStart) {
 
-		//Seeks to the specified position in the video.
-		if(position != DONT_SEEK) {
-			mVideoView.seekTo(position);
-			
-			//If we're seeking to a position, wait one second before updating the UI.
-			// this is because the video won't have loaded yet and it will update to the wrong time
-			// if this task is executed immediately.
+			//Seek to the requested position.
+			mVideoView.seekTo(seekPosition);
+			seekOnStart = false;
+
+			//If we start this instantly it will load the wrong time to the UI for a half
+			// a second because of the fact that we seeked on this start.  So we want a 
+			// one second delay before the timer starts to give the videoview time to update.
 			mSeekBarTimer.scheduleAtFixedRate(new UpdateVideoUITimerTask(), 1000, 1000);
 		}
 		else {
-			//If we're not seeking, start updating the UI immediately because it will load
-			// the correc time from the start.
+			//If we didn't seek, just start the UI update timer instantly.
 			mSeekBarTimer.scheduleAtFixedRate(new UpdateVideoUITimerTask(), 0, 1000);
 		}
 
@@ -508,6 +519,15 @@ public class VideoFragment extends Fragment implements ClipQueue {
 			keepControllerShown = false;
 			showController();
 		}
+	}
+	
+	/**
+	 * Sets up the video to seek to the given position the next time it's played
+	 * @param pos - the position we want to seek to.
+	 */
+	public void prepareSeek(int pos) {
+		seekOnStart = true;
+		seekPosition = pos;
 	}
 
 	/**
@@ -545,7 +565,7 @@ public class VideoFragment extends Fragment implements ClipQueue {
 		if(mVideoState == WANTS_TO_PLAY) {
 			mVideoState = PLAYING;
 			updateVideoPath();
-			startVideo(DONT_SEEK, true);
+			startVideo(true);
 		}
 	}
 	
