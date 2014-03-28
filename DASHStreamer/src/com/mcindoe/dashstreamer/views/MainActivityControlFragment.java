@@ -7,19 +7,27 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ListView;
 
 import com.mcindoe.dashstreamer.R;
 import com.mcindoe.dashstreamer.controllers.DASHStreamerApplication;
 import com.mcindoe.dashstreamer.controllers.MPDParser;
 import com.mcindoe.dashstreamer.controllers.MPDParser.MPDLoadedListener;
+import com.mcindoe.dashstreamer.controllers.MPIArrayAdapter;
+import com.mcindoe.dashstreamer.controllers.MPIParser;
+import com.mcindoe.dashstreamer.controllers.MPIParser.MPILoadedListener;
 import com.mcindoe.dashstreamer.models.MediaPresentation;
+import com.mcindoe.dashstreamer.models.MediaPresentationIndex;
 
 public class MainActivityControlFragment extends Fragment {
-	
+
 	private Fragment mFragment;
+	private ListView mVideoListView;
+	private MPIArrayAdapter mMPIArrayAdapter;
+	private ArrayList<MediaPresentationIndex> mMPIs;
 
 	public MainActivityControlFragment() {
 		mFragment = this;
@@ -31,27 +39,48 @@ public class MainActivityControlFragment extends Fragment {
 
 		View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-		Button startVideoButton = (Button)rootView.findViewById(R.id.start_video_button);
+		mVideoListView = (ListView)rootView.findViewById(R.id.video_list_view);
 
-		startVideoButton.setOnClickListener(new OnClickListener() {
+		//Starts a request for the MPIs from the server.
+		new MPIParser("http://10.0.0.3:4573/mpi.xml", new MPILoadedListener() {
 
+			/**
+			 * Called when the MPIs have been pulled from the server successfully
+			 */
 			@Override
-			public void onClick(View v) {
+			public void onIndicesLoaded(ArrayList<MediaPresentationIndex> mpis) {
+				
+				mMPIs = mpis;
 
-				new MPDParser("http://10.0.0.3:4573/MPDs/iasip_s09_e01_mpd.xml", new MPDLoadedListener() {
+				//Sets up our video list view with our custom array adapter.
+				mMPIArrayAdapter = new MPIArrayAdapter(mFragment.getActivity(), mMPIs, null);
+				mVideoListView.setAdapter(mMPIArrayAdapter);
+
+				//Sets the click listener for the list view.
+				mVideoListView.setOnItemClickListener(new OnItemClickListener() {
 
 					@Override
-					public void onMediaPresentationsLoaded(ArrayList<MediaPresentation> mpds) {
+					public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-						((DASHStreamerApplication)mFragment.getActivity().getApplication()).setCurrentMediaPresentation(mpds.get(0));
+						//Grabs the MPD for the selected MPI and starts the play activity.
+						new MPDParser(mMPIs.get(position).getUrl(), new MPDLoadedListener() {
 
-						Intent intent = new Intent(mFragment.getActivity(), PlayActivity.class);
-						startActivityForResult(intent, 0);
-						mFragment.getActivity().overridePendingTransition(R.animator.enter_next_activity, R.animator.exit_current_activity);
+							@Override
+							public void onMediaPresentationsLoaded(ArrayList<MediaPresentation> mpds) {
+
+								((DASHStreamerApplication)mFragment.getActivity().getApplication()).setCurrentMediaPresentation(mpds.get(0));
+
+								Intent intent = new Intent(mFragment.getActivity(), PlayActivity.class);
+								startActivityForResult(intent, 0);
+								mFragment.getActivity().overridePendingTransition(R.animator.enter_next_activity, R.animator.exit_current_activity);
+							}
+						});
 					}
 				});
+
 			}
 		});
+
 
 		return rootView;
 	}

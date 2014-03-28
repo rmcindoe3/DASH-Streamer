@@ -6,5 +6,6 @@
     <color name="navigation_button_color">#c04652</color>
     <color name="faded_navigation_button_color">#88c04652</color>
     <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
     
 </resources>

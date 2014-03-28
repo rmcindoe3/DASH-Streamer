@@ -6,7 +6,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.mcindoe.dashstreamer.R;
-import com.mcindoe.dashstreamer.controllers.DASHManager;
 
 public class MainActivity extends ActionBarActivity {
 
@@ -14,8 +13,6 @@ public class MainActivity extends ActionBarActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		
-		setTitle("Select Video");
 
 		if (savedInstanceState == null) {
 			getSupportFragmentManager().beginTransaction()

@@ -25,6 +25,11 @@
     <style name="AppTheme.Layout">
         <item name="android:background">@drawable/activity_bg</item>
     </style>
+
+    <style name="AppTheme.TextView">
+        <item name="android:ellipsize">end</item>
+        <item name="android:singleLine">true</item>
+    </style>
     
     <style name="AppTheme.Button">
     </style>

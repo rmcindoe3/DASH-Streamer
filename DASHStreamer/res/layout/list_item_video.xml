@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/video_list_item_container"
+    android:background="@drawable/video_background"
+    android:layout_width="match_parent"
+    android:layout_height="200px" >
+    
+    <ImageView
+        android:id="@+id/video_list_item_picture"
+        android:padding="2dp"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:scaleType="fitEnd"
+        android:layout_alignParentRight="true" />
+    
+    <View
+        android:id="@+id/video_list_item_button"
+        android:background="@drawable/video_button"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true" />
+    
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:padding="10dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true" >
+        
+        <TextView
+            android:id="@+id/video_title_text_view"
+            android:textSize="17sp"
+            android:singleLine="true"
+            android:ellipsize="end"
+        	android:gravity="center_vertical"
+            android:layout_width="160dp"
+            android:layout_height="0dp"
+            android:layout_weight="2" />
+        
+        <TextView
+            android:id="@+id/video_season_text_view"
+            android:textSize="12sp"
+            android:textColor="#777777"
+        	android:gravity="center_vertical"
+            android:layout_width="160dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+        
+        <TextView
+            android:id="@+id/video_episode_text_view"
+            android:textSize="12sp"
+            android:textColor="#777777"
+        	android:gravity="center_vertical"
+            android:layout_width="160dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+        
+        <TextView
+            android:id="@+id/video_duration_text_view"
+            android:textSize="12sp"
+            android:textColor="#777777"
+        	android:gravity="center_vertical"
+            android:layout_width="160dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+    </LinearLayout>
+    
+</RelativeLayout>
