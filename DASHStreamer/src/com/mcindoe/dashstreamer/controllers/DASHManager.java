@@ -5,6 +5,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -30,12 +32,16 @@ public class DASHManager {
 	private static final String DOWNLOAD_FOLDER = Environment.getExternalStorageDirectory() + "/DASHStreamer/";
 	
 	private int mCurrSegmentNum;
+	private int mCurrRepresentationNum;
+
 	private Queue<Long> mThroughputHistory;
 
 	private MediaPresentation mMediaPresentation;
 	private Period mPeriod;
 	private AdaptationSet mAdaptationSet;
 	private Representation mRepresentation;
+	
+	private ArrayList<Integer> mAvailableBitrates;
 	
 	private DownloadClipTask mDownloadClipTask;
 	
@@ -52,7 +58,11 @@ public class DASHManager {
 			videoClipFolder.mkdirs();
 		}
 
+		//Start at the beginning of the video.
 		mCurrSegmentNum = 0;
+		
+		//Default to the lowest bitrate possible
+		mCurrRepresentationNum = 0;
 
 		mThroughputHistory = new LinkedList<Long>();
 
@@ -63,11 +73,18 @@ public class DASHManager {
 		mAdaptationSet = mPeriod.getAdaptationSets().get(0);
 
 		//Start out at the lowest bitrate.
-		mRepresentation = mAdaptationSet.getRepresentations().get(0);
+		mRepresentation = mAdaptationSet.getRepresentations().get(mCurrRepresentationNum);
+		
+		calculateAvailableBitrates();
 		
 		requestCurrentSegment();
 	}
 	
+	/**
+	 * Called when the video was seeked to a different part of the video
+	 * that was not currently queued.
+	 * @param clipNum - the clip number that was seeked to.
+	 */
 	public void setCurrentClipNum(int clipNum) {
 		
 		//Cancel anything currently downloading and clear
@@ -109,6 +126,60 @@ public class DASHManager {
 	
 	public String getCurrentSegmentFilename() {
 		return mRepresentation.getSegments().get(mCurrSegmentNum).getUrl();
+	}
+	
+	/**
+	 * Choses the best quality video source based on the current
+	 * estimated throughput of the system.
+	 */
+	public void updateVideoBitrate() {
+		
+		//grabs our current average throughput.
+		long aveThroughput = getAverageThroughput();
+		
+		//Default to the lowest bitrate.
+		mCurrRepresentationNum = 0;
+		
+		//For all available bitrates, find the highest bitrate where
+		// the bitrate is less than or equal to 70% of our available throughput.
+		for(int i = mAvailableBitrates.size() - 1; i >= 0; i--) {
+			if(aveThroughput >= (mAvailableBitrates.get(i)*10/7)) {
+				mCurrRepresentationNum = i;
+				break;
+			}
+		}
+
+		//Set the current representation based on this.
+		mRepresentation = mAdaptationSet.getRepresentations().get(mCurrRepresentationNum);
+
+	}
+	
+	/**
+	 * Fills out the available bitrates for the current adaptation set.
+	 */
+	public void calculateAvailableBitrates() {
+		
+		//Fill out the available bitrates for the stream.
+		mAvailableBitrates = new ArrayList<Integer>();
+		for(int i = 0; i < mAdaptationSet.getRepresentations().size(); i++) {
+			mAvailableBitrates.add(mAdaptationSet.getRepresentations().get(i).getBitrate());
+		}
+	}
+	
+	/**
+	 * Calculates the average throughput of the previously received segments.
+	 * @return - the average current throughput.
+	 */
+	public long getAverageThroughput() {
+
+		long ret = 0;
+		Iterator<Long> iter = mThroughputHistory.iterator();
+
+		while(iter.hasNext()) {
+			ret += iter.next();
+		}
+
+		return ret;
 	}
 
 	/**
@@ -199,15 +270,22 @@ public class DASHManager {
 		protected void onPostExecute(Long result) {
 			if(result != -1) {
 
-				Log.d(Utils.LOG_TAG, "Successful download completed");
+				Log.d(Utils.LOG_TAG, "Downloaded " + getCurrentSegmentFilename() + " at " + result + " Kbps");
 
+				mClipQueue.addClipToQueue(new VideoClip(DOWNLOAD_FOLDER + getCurrentSegmentFilename(), mCurrSegmentNum));
+
+				//Adds the resulting throughput of the last video to our history.
 				mThroughputHistory.add(result);
+				
+				//Clears our throughput history that is no longer relevant to
+				// the current network state.
 				while(mThroughputHistory.size() > 3) {
 					mThroughputHistory.poll();
 				}
-				
-				mClipQueue.addClipToQueue(new VideoClip(DOWNLOAD_FOLDER + getCurrentSegmentFilename(), mCurrSegmentNum));
-				
+
+				//Updates the selected video bitrate based on the new throughput.
+				updateVideoBitrate();
+
 				//if this wasn't the last segment in the video.
 				if(++mCurrSegmentNum < mRepresentation.getSegments().size()) {
 
@@ -216,7 +294,7 @@ public class DASHManager {
 						requestCurrentSegment();
 					}
 				}
-				
+
 			}
 			else {
 				Log.d(Utils.LOG_TAG, "Download of media segment failed");

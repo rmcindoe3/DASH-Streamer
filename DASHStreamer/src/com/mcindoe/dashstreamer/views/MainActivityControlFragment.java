@@ -38,7 +38,7 @@ public class MainActivityControlFragment extends Fragment {
 			@Override
 			public void onClick(View v) {
 
-				new MPDParser("http://10.0.0.3:4573/MPDs/bb_s05_e13_mpd.xml", new MPDLoadedListener() {
+				new MPDParser("http://10.0.0.3:4573/MPDs/iasip_s09_e01_mpd.xml", new MPDLoadedListener() {
 
 					@Override
 					public void onMediaPresentationsLoaded(ArrayList<MediaPresentation> mpds) {
