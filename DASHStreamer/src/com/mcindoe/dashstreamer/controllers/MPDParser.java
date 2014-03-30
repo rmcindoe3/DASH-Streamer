@@ -38,6 +38,7 @@ public class MPDParser extends XMLParser {
 
 	public interface MPDLoadedListener {
 		public void onMediaPresentationsLoaded(ArrayList<MediaPresentation> mpds);
+		public void onFailedDownload();
 	}
 	
 	public MPDParser(String url, MPDLoadedListener mpdLL) {
@@ -51,6 +52,11 @@ public class MPDParser extends XMLParser {
 	@Override
 	protected void onSuccessfulDownload() {
 		mMPDLoadedListener.onMediaPresentationsLoaded(parseMediaPresentation());
+	}
+
+	@Override
+	protected void onFailedDownload() {
+		mMPDLoadedListener.onFailedDownload();
 	}
 	
 	/**

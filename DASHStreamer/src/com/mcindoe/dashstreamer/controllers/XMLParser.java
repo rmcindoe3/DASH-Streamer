@@ -26,6 +26,7 @@ public abstract class XMLParser {
 	protected Document doc;
 	
 	protected abstract void onSuccessfulDownload();
+	protected abstract void onFailedDownload();
 	
 	/**
 	 * Grabs the value of the given attribute from the given node
@@ -73,8 +74,13 @@ public abstract class XMLParser {
 		protected void onPostExecute(String result) {
 
 			//Grabs the MPD from the URL and puts it into a Document.
-			doc = getDomElement(result);
-			onSuccessfulDownload();
+			if(result != null) {
+				doc = getDomElement(result);
+				onSuccessfulDownload();
+			}
+			else {
+				onFailedDownload();
+			}
 		}
 		
 	}

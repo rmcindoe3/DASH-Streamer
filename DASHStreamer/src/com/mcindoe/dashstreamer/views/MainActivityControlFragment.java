@@ -5,16 +5,19 @@ import java.util.ArrayList;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.mcindoe.dashstreamer.R;
 import com.mcindoe.dashstreamer.controllers.DASHStreamerApplication;
 import com.mcindoe.dashstreamer.controllers.MPDParser;
+import com.mcindoe.dashstreamer.controllers.Utils;
 import com.mcindoe.dashstreamer.controllers.MPDParser.MPDLoadedListener;
 import com.mcindoe.dashstreamer.controllers.MPIArrayAdapter;
 import com.mcindoe.dashstreamer.controllers.MPIParser;
@@ -45,6 +48,15 @@ public class MainActivityControlFragment extends Fragment {
 		new MPIParser("http://10.0.0.3:4573/mpi.xml", new MPILoadedListener() {
 
 			/**
+			 * Called when the download from the server fails.
+			 */
+			@Override
+			public void onFailedDownload() {
+				Log.d(Utils.LOG_TAG, "MPI download failed.");
+				Toast.makeText(mFragment.getActivity(), "Load from server failed.\nTry again later.", Toast.LENGTH_LONG).show();
+			}
+
+			/**
 			 * Called when the MPIs have been pulled from the server successfully
 			 */
 			@Override
@@ -64,6 +76,15 @@ public class MainActivityControlFragment extends Fragment {
 
 						//Grabs the MPD for the selected MPI and starts the play activity.
 						new MPDParser(mMPIs.get(position).getUrl(), new MPDLoadedListener() {
+
+							/**
+							 * Called when the download from the server fails.
+							 */
+							@Override
+							public void onFailedDownload() {
+								Log.d(Utils.LOG_TAG, "MPI download failed.");
+								Toast.makeText(mFragment.getActivity(), "Load from server failed.\nTry again later.", Toast.LENGTH_LONG).show();
+							}
 
 							@Override
 							public void onMediaPresentationsLoaded(ArrayList<MediaPresentation> mpds) {

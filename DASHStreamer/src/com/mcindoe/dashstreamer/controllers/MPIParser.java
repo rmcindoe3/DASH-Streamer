@@ -35,6 +35,7 @@ public class MPIParser extends XMLParser {
 
 	public interface MPILoadedListener {
 		public void onIndicesLoaded(ArrayList<MediaPresentationIndex> mpis);
+		public void onFailedDownload();
 	}
 	
 	public MPIParser(String url, MPILoadedListener mpiLL) {
@@ -46,6 +47,11 @@ public class MPIParser extends XMLParser {
 	@Override
 	protected void onSuccessfulDownload() {
 		mMPILoadedListener.onIndicesLoaded(parseIndices());
+	}
+
+	@Override
+	protected void onFailedDownload() {
+		mMPILoadedListener.onFailedDownload();
 	}
 	
 	/**
