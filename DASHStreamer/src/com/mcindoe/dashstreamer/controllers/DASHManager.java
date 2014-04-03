@@ -87,14 +87,29 @@ public class DASHManager {
 	 */
 	public void setCurrentClipNum(int clipNum) {
 		
-		//Cancel anything currently downloading and clear
-		// what we have in the queue already.
-		cancelCurrentDownload();
-		mClipQueue.clear();
+		//If we're not already trying to get the selected clip number
+		if(clipNum != mCurrSegmentNum) {
+
+			//Cancel anything currently downloading and clear
+			// what we have in the queue already.
+			cancelCurrentDownload();
+			mClipQueue.clear();
+
+			//Updates the current segment number and then requests it.
+			mCurrSegmentNum = clipNum;
+			requestCurrentSegment();
+		}
+	}
+	
+	/**
+	 * Tells the DASH manager that there is now space in the clip queue.
+	 */
+	public void clipCompleted() {
 		
-		//Updates the current segment number and then requests it.
-		mCurrSegmentNum = clipNum;
-		requestCurrentSegment();
+		//If we're not already downloading something, then request the current segment
+		if(mDownloadClipTask.getStatus() != AsyncTask.Status.RUNNING) {
+			requestCurrentSegment();
+		}
 	}
 	
 	/**

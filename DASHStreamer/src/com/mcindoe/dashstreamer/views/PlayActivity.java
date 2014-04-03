@@ -157,6 +157,16 @@ public class PlayActivity extends ActionBarActivity implements VideoControlListe
 	}
 
 	/**
+	 * Called by the video fragment when a clip completes playing
+	 */
+	@Override
+	public void clipCompleted() {
+		
+		//Let our DASH manager know that a clip has finished playing.
+		mDASHManager.clipCompleted();
+	}
+
+	/**
 	 * Called when the video is loaded and about to start playing in our VideoFragment.
 	 * The purpose of this method is to allocate the correct video dimensions to the 
 	 * video fragment container once the video height is loaded in the player.

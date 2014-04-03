@@ -179,6 +179,11 @@ public class VideoFragment extends Fragment implements ClipQueue {
 					//Update the video path and start the new video.
 					updateVideoPath();
 					startVideo(false);
+
+					//Let our clip request listener know that a clip has been completed
+					if(mClipRequestListener != null) {
+						mClipRequestListener.clipCompleted();
+					}
 				}
 
 				deleteClip(clipToDelete);
