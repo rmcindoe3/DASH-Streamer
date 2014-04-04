@@ -8,6 +8,12 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.mcindoe.dashstreamer.MainActivity$PlaceholderFragment" >
+
+    <TextView
+        style="@style/AppTheme.TextView.Subtitle"
+        android:text="@string/select_video_subtitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
     
     <ListView
         android:id="@+id/video_list_view"

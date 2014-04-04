@@ -42,7 +42,7 @@
         <TextView
             android:id="@+id/video_season_text_view"
             android:textSize="12sp"
-            android:textColor="#777777"
+            android:textColor="@color/gray"
         	android:gravity="center_vertical"
             android:layout_width="160dp"
             android:layout_height="0dp"
@@ -51,7 +51,7 @@
         <TextView
             android:id="@+id/video_episode_text_view"
             android:textSize="12sp"
-            android:textColor="#777777"
+            android:textColor="@color/gray"
         	android:gravity="center_vertical"
             android:layout_width="160dp"
             android:layout_height="0dp"
@@ -60,7 +60,7 @@
         <TextView
             android:id="@+id/video_duration_text_view"
             android:textSize="12sp"
-            android:textColor="#777777"
+            android:textColor="@color/gray"
         	android:gravity="center_vertical"
             android:layout_width="160dp"
             android:layout_height="0dp"

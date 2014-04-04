@@ -1,5 +1,8 @@
 package com.mcindoe.dashstreamer.views;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import android.app.ActionBar.LayoutParams;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
@@ -16,6 +19,7 @@ import com.mcindoe.dashstreamer.R;
 import com.mcindoe.dashstreamer.controllers.DASHManager;
 import com.mcindoe.dashstreamer.controllers.DASHStreamerApplication;
 import com.mcindoe.dashstreamer.controllers.Utils;
+import com.mcindoe.dashstreamer.models.AdaptationSet;
 import com.mcindoe.dashstreamer.models.ClipRequestListener;
 import com.mcindoe.dashstreamer.models.MediaPresentation;
 import com.mcindoe.dashstreamer.models.VideoControlListener;
@@ -72,6 +76,7 @@ public class PlayActivity extends ActionBarActivity implements VideoControlListe
 			
 			//Create it.
 			mVideoControlFragment = new VideoControlFragment();
+			mVideoControlFragment.setAdaptationSetTitles(getAdaptationSetTitles());
 
 			//Add the video control fragment to our container.
 			FragmentTransaction ft = fm.beginTransaction();
@@ -81,6 +86,23 @@ public class PlayActivity extends ActionBarActivity implements VideoControlListe
 		}
 		
 		mDASHManager = new DASHManager(mMediaPresentation, mVideoFragment);
+	}
+	
+	/**
+	 * Returns a list of the titles of the available adaptation sets for 
+	 * this media presentation.
+	 * @return - list of titles.
+	 */
+	public List<String> getAdaptationSetTitles() {
+		
+		List<AdaptationSet> sets = mMediaPresentation.getPeriods().get(0).getAdaptationSets();
+		List<String> ret = new ArrayList<String>();
+		
+		for(int i = 0; i < sets.size(); i++) {
+			ret.add(sets.get(i).getName());
+		}
+		
+		return ret;
 	}
 
 	@Override
@@ -140,7 +162,12 @@ public class PlayActivity extends ActionBarActivity implements VideoControlListe
 		}
 		//Otherwise go back to the previous activity.
 		else {
+
 			super.onBackPressed();
+
+			//Cancels any download currently happening
+			mDASHManager.cancelCurrentDownload();
+
 			//Mirrors our activity entrance animation.
 			overridePendingTransition(R.animator.enter_previous_activity, R.animator.exit_next_activity);
 		}
@@ -164,6 +191,19 @@ public class PlayActivity extends ActionBarActivity implements VideoControlListe
 		
 		//Let our DASH manager know that a clip has finished playing.
 		mDASHManager.clipCompleted();
+	}
+
+	/**
+	 * Called by the video control fragment when the user selects
+	 * that they would like to switch adaptation sets
+	 */
+	@Override
+	public void setCurrentAdaptationSet(int id) {
+
+		if(mDASHManager.getCurrAdaptationSetNum() != id) {
+			mDASHManager.setCurrAdaptationSetNum(id);
+			mVideoFragment.changeStream();
+		}
 	}
 
 	/**

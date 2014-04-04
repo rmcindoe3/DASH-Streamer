@@ -13,7 +13,6 @@ import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -29,7 +28,6 @@ import android.widget.VideoView;
 
 import com.mcindoe.dashstreamer.R;
 import com.mcindoe.dashstreamer.controllers.DeleteFileTask;
-import com.mcindoe.dashstreamer.controllers.Utils;
 import com.mcindoe.dashstreamer.models.ClipQueue;
 import com.mcindoe.dashstreamer.models.ClipRequestListener;
 import com.mcindoe.dashstreamer.models.VideoClip;
@@ -299,6 +297,31 @@ public class VideoFragment extends Fragment implements ClipQueue {
 	}
 	
 	/**
+	 * Called by the containing activity when there is a change in one of
+	 * the stream settings.
+	 */
+	public void changeStream() {
+		
+		//Cancels the timer that updates the UI
+		mSeekBarTimer.cancel();
+
+		//Prepare the video to seek to the position it was interrupted at
+		prepareSeek(mVideoView.getCurrentPosition());
+
+		//Stop playback of the video while we wait for the new stream to load
+		pauseVideo();
+		
+		//We want to be in this state so that when the video clip gets loaded
+		// from the DASHmanager, we'll start playing.
+		mVideoState = WANTS_TO_PLAY;
+		
+		//Request our clip now.
+		if(mClipRequestListener != null) {
+			mClipRequestListener.requestClip(currClipNum);
+		}
+	}
+	
+	/**
 	 * Indicates there was a request to pause the video from
 	 * the user.  Manages state of video.
 	 */
@@ -504,6 +527,9 @@ public class VideoFragment extends Fragment implements ClipQueue {
 			//If we start this instantly it will load the wrong time to the UI for a half
 			// a second because of the fact that we seeked on this start.  So we want a 
 			// one second delay before the timer starts to give the videoview time to update.
+			int currTime = clipLength*1000*currClipNum + seekPosition;
+			mVideoSeekBar.setProgress(currTime/1000);
+			updateVideoTimeTextView(currTime);
 			mSeekBarTimer.scheduleAtFixedRate(new UpdateVideoUITimerTask(), 1000, 1000);
 		}
 		else {
@@ -547,7 +573,6 @@ public class VideoFragment extends Fragment implements ClipQueue {
 		currClipNum = clip.getClipNum();
 
 		//Sets the filepath of our videoview accordingly.
-		Log.d(Utils.LOG_TAG, "Setting video path: " + clip.getFilePath());
 		mVideoView.setVideoPath(clip.getFilePath());
 
 		//Tell our listener that the video has been loaded.
@@ -567,11 +592,29 @@ public class VideoFragment extends Fragment implements ClipQueue {
 		clipsToPlay.add(videoClip);
 		
 		//If the video is currently waiting to play, then start the video.
-		if(mVideoState == WANTS_TO_PLAY) {
+		if(mVideoState == WANTS_TO_PLAY && enoughVideoBuffered()) {
+			
 			mVideoState = PLAYING;
 			updateVideoPath();
 			startVideo(true);
 		}
+	}
+	
+	/**
+	 * Determines if enough of the video is buffered.  This is used
+	 * when determining whether or not to start playing the video from
+	 * a WANTS_TO_PLAY state.
+	 * @return - true if there are over 10 seconds buffered, false otherwise
+	 */
+	public boolean enoughVideoBuffered() {
+
+		int timeBuffered = clipsToPlay.size()*clipLength;
+		
+		if(seekOnStart) {
+			timeBuffered -= seekPosition/1000;
+		}
+		
+		return timeBuffered >= 10;
 	}
 	
 	/**

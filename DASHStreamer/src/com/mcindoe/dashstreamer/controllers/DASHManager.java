@@ -33,6 +33,7 @@ public class DASHManager {
 	
 	private int mCurrSegmentNum;
 	private int mCurrRepresentationNum;
+	private int mCurrAdaptationSetNum;
 
 	private Queue<Long> mThroughputHistory;
 
@@ -63,6 +64,9 @@ public class DASHManager {
 		
 		//Default to the lowest bitrate possible
 		mCurrRepresentationNum = 0;
+		
+		//Start at the default adaptation set
+		mCurrAdaptationSetNum = 0;
 
 		mThroughputHistory = new LinkedList<Long>();
 
@@ -70,7 +74,7 @@ public class DASHManager {
 		mPeriod = mMediaPresentation.getPeriods().get(0);
 
 		//Start with the default adaptation set.
-		mAdaptationSet = mPeriod.getAdaptationSets().get(0);
+		mAdaptationSet = mPeriod.getAdaptationSets().get(mCurrAdaptationSetNum);
 
 		//Start out at the lowest bitrate.
 		mRepresentation = mAdaptationSet.getRepresentations().get(mCurrRepresentationNum);
@@ -95,6 +99,11 @@ public class DASHManager {
 			cancelCurrentDownload();
 			mClipQueue.clear();
 
+			//Whenever we clear our clip queue we also want to clear the
+			// throughput history as well. The network gets a lot more congested
+			// quickly at this time, so the previous data is less relevant
+			mThroughputHistory.clear();
+
 			//Updates the current segment number and then requests it.
 			mCurrSegmentNum = clipNum;
 			requestCurrentSegment();
@@ -107,7 +116,8 @@ public class DASHManager {
 	public void clipCompleted() {
 		
 		//If we're not already downloading something, then request the current segment
-		if(mDownloadClipTask.getStatus() != AsyncTask.Status.RUNNING) {
+		if(mDownloadClipTask.getStatus() != AsyncTask.Status.RUNNING &&
+				mCurrSegmentNum < mRepresentation.getSegments().size()) {
 			requestCurrentSegment();
 		}
 	}
@@ -151,6 +161,7 @@ public class DASHManager {
 		
 		//grabs our current average throughput.
 		long aveThroughput = getAverageThroughput();
+		Log.d(Utils.LOG_TAG, "Curr Ave Throughput: " + aveThroughput);
 		
 		//Default to the lowest bitrate.
 		mCurrRepresentationNum = 0;
@@ -193,6 +204,8 @@ public class DASHManager {
 		while(iter.hasNext()) {
 			ret += iter.next();
 		}
+		
+		ret /= mThroughputHistory.size();
 
 		return ret;
 	}
@@ -322,4 +335,34 @@ public class DASHManager {
 		
 	}
 
+	/**
+	 * Called by the containing activity when the user has selected
+	 * a different adaptation set to view.
+	 * @param num - the index of the adaptation set the user selected.
+	 */
+	public void setCurrAdaptationSetNum(int num) {
+		
+		//Stop wasting time downloading something that the user will not see.
+		cancelCurrentDownload();
+
+		//Update our media presentation variables
+		mCurrAdaptationSetNum = num;
+		mAdaptationSet = mPeriod.getAdaptationSets().get(mCurrAdaptationSetNum);
+		
+		//Go back to the lowest bitrate so we can start watching the video asap
+		// Another reason to do this is on the case that this adaptation set doesn't
+		// have the same available bitrates as the previous one.
+		mCurrRepresentationNum = 0;
+		mRepresentation = mAdaptationSet.getRepresentations().get(mCurrRepresentationNum);
+		
+		//Segment number is set to -1 to make sure that the next requested segment
+		// is downloaded no matter what. (solves edge case problem)
+		mCurrSegmentNum = -1;
+		
+		calculateAvailableBitrates();
+	}
+	
+	public int getCurrAdaptationSetNum() {
+		return mCurrAdaptationSetNum;
+	}
 }

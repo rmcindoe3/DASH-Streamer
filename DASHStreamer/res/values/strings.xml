@@ -8,5 +8,7 @@
     <string name="start_video_button">Play Test Video</string>
     <string name="default_video_time">00:00</string>
     <string name="fullscreen_button">Switch to Fullscreen</string>
+    <string name="adaptation_set_subtitle">Select Stream Version:</string>
+    <string name="select_video_subtitle">Select Video:</string>
 
 </resources>
