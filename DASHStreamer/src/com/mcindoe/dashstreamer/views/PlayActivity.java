@@ -5,6 +5,7 @@ import java.util.List;
 
 import android.app.ActionBar.LayoutParams;
 import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -106,35 +107,27 @@ public class PlayActivity extends ActionBarActivity implements VideoControlListe
 	}
 
 	@Override
-	public void switchToFullscreen() {
+	public void onConfigurationChanged(Configuration newConfig) {
+		super.onConfigurationChanged(newConfig);
 		
-		//Change the screen orientation.
-		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+		if(newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
 
-		//Hide the action bar and status bar.
-		getActionBar().hide();
-		getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_FULLSCREEN);
+			//Hide the action bar and status bar.
+			getActionBar().hide();
+			getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_FULLSCREEN);
 
-		//Make the video container layout fill the screen.
-		FrameLayout fl = (FrameLayout)findViewById(R.id.video_container);
-		LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) fl.getLayoutParams();
-		params.height = LayoutParams.MATCH_PARENT;
-		fl.setLayoutParams(params);
+			//Make the video container layout fill the screen.
+			FrameLayout fl = (FrameLayout)findViewById(R.id.video_container);
+			LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) fl.getLayoutParams();
+			params.height = LayoutParams.MATCH_PARENT;
+			fl.setLayoutParams(params);
 
-		//Tells the activity to re-evaluate all of it's parameters
-		findViewById(R.id.play_activity).requestLayout();
-		
-		playingFullscreen = true;
-	}
+			//Tells the activity to re-evaluate all of it's parameters
+			findViewById(R.id.play_activity).requestLayout();
 
-	@Override
-	public void onBackPressed() {
-		
-		//If we're in fullscreen mode then just switch back to non fullscreen.
-		if(playingFullscreen) {
-			
-			//Change the screen orientation.
-			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+			playingFullscreen = true;
+		}
+		else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
 		
 			if(videoLoaded) {
 				//Changes the layout of our video container to wrap it's contents.
@@ -154,11 +147,28 @@ public class PlayActivity extends ActionBarActivity implements VideoControlListe
 			//Tells the activity to re-evaluate all of it's parameters
 			findViewById(R.id.play_activity).requestLayout();
 
-			//Hide the action bar and status bar.
+			//show the action bar and status bar.
 			getActionBar().show();
 			getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
 			
 			playingFullscreen = false;
+		}
+	}
+
+	@Override
+	public void switchToFullscreen() {
+		
+		//Change the screen orientation.
+		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+	}
+
+	@Override
+	public void onBackPressed() {
+		
+		//If we're in fullscreen mode then just switch back to non fullscreen.
+		if(playingFullscreen) {
+			//Change the screen orientation.
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 		}
 		//Otherwise go back to the previous activity.
 		else {

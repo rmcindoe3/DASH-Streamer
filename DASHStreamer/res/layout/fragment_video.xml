@@ -1,13 +1,15 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:background="@color/black"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     tools:context="com.mcindoe.dashstreamer.MainActivityFragment" >
 
     <VideoView
         android:id="@+id/my_video_view"
+        android:layout_centerInParent="true"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="match_parent" />
     
     <LinearLayout
         android:id="@+id/controller_layout"

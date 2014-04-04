@@ -26,6 +26,7 @@ public class VideoControlFragment extends Fragment {
 	private List<String> mAdaptationSetTitles;
 	private VideoControlListener mVideoControlListener;
 	private Button mFullscreenButton;
+	private int mCurrAdaptationSetNum;
 	
 	public VideoControlFragment() {
 		
@@ -37,6 +38,8 @@ public class VideoControlFragment extends Fragment {
 		
 		//Retain the instance of this video fragment when a config change happens
 		setRetainInstance(true);
+
+		mCurrAdaptationSetNum = 0;
 
 		//Inflate our view from the xml file.
 		View rootView = inflater.inflate(R.layout.fragment_video_control, container, false);
@@ -61,6 +64,7 @@ public class VideoControlFragment extends Fragment {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 				
+				mCurrAdaptationSetNum = position;
 				highlightSelectedAdaptationSet(position);
 				mVideoControlListener.setCurrentAdaptationSet(position);
 			}
@@ -144,8 +148,8 @@ public class VideoControlFragment extends Fragment {
 			//Set the title
 			((TextView)adaptationSetRow.findViewById(R.id.adaptation_set_name)).setText(title);
 			
-			//The 0th position defaults to the selected stream, so highlight the text black
-			if(position == 0) {
+			//Highlight this text to black if it is the currently selected adaptation set.
+			if(position == mCurrAdaptationSetNum) {
 				((TextView)adaptationSetRow.findViewById(R.id.adaptation_set_name)).setTextColor(getResources().getColor(R.color.black));
 			}
 
