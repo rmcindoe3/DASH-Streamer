@@ -21,6 +21,7 @@ import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
@@ -47,6 +48,7 @@ public class VideoFragment extends Fragment implements ClipQueue {
 	private SeekBar mVideoSeekBar;
 	private TextView mVideoTimeTextView;
 	private LinearLayout mControllerLayout;
+	private ProgressBar mVideoLoadingProgressBar;
 	
 	//Timers for video events
 	private Timer mControllerTimer;
@@ -128,6 +130,10 @@ public class VideoFragment extends Fragment implements ClipQueue {
 		mPlayPauseButton = (ImageButton)rootView.findViewById(R.id.play_pause_button);
 		mVideoSeekBar = (SeekBar)rootView.findViewById(R.id.video_seek_bar);
 		mVideoTimeTextView = (TextView)rootView.findViewById(R.id.time_text_view);
+		mVideoLoadingProgressBar = (ProgressBar)rootView.findViewById(R.id.video_loading_progress_bar);
+		
+		//Initially we don't want to show the loading progress bar
+		mVideoLoadingProgressBar.setAlpha(0);
 		
 		//When the current video finishes, start the next one if available.
 		mVideoView.setOnCompletionListener(new OnCompletionListener() {
@@ -163,6 +169,9 @@ public class VideoFragment extends Fragment implements ClipQueue {
 					//Set the state of the video to show we want to play, but can't.
 					mVideoState = WANTS_TO_PLAY;
 					
+					//Show the loading progress bar.
+					mVideoLoadingProgressBar.setAlpha(1);
+
 					//Request the next clip.
 					if(mClipRequestListener != null) {
 						mClipRequestListener.requestClip(clipToDelete.getClipNum() + 1);
@@ -281,6 +290,9 @@ public class VideoFragment extends Fragment implements ClipQueue {
 					
 					//We're changing to a want to play state.
 					mVideoState = WANTS_TO_PLAY;
+
+					//Show the loading progress bar.
+					mVideoLoadingProgressBar.setAlpha(1);
 					
 					//Request the selected clip.
 					if(mClipRequestListener != null) {
@@ -314,6 +326,9 @@ public class VideoFragment extends Fragment implements ClipQueue {
 		//We want to be in this state so that when the video clip gets loaded
 		// from the DASHmanager, we'll start playing.
 		mVideoState = WANTS_TO_PLAY;
+
+		//Show the loading progress bar.
+		mVideoLoadingProgressBar.setAlpha(1);
 		
 		//Request our clip now.
 		if(mClipRequestListener != null) {
@@ -386,6 +401,9 @@ public class VideoFragment extends Fragment implements ClipQueue {
 				
 				//Switch to the wants to play state.
 				mVideoState = WANTS_TO_PLAY;
+
+				//Show the loading progress bar.
+				mVideoLoadingProgressBar.setAlpha(1);
 
 				//Make a request to our clip request listener.
 				if(mClipRequestListener != null) {
@@ -593,6 +611,9 @@ public class VideoFragment extends Fragment implements ClipQueue {
 		
 		//If the video is currently waiting to play, then start the video.
 		if(mVideoState == WANTS_TO_PLAY && enoughVideoBuffered()) {
+			
+			//Hides the loading progress bar.
+			mVideoLoadingProgressBar.setAlpha(0);
 			
 			mVideoState = PLAYING;
 			updateVideoPath();
