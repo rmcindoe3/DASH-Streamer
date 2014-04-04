@@ -44,6 +44,8 @@ public class PlayActivity extends ActionBarActivity implements VideoControlListe
 		setContentView(R.layout.activity_play);
 		
 		mMediaPresentation = ((DASHStreamerApplication)getApplication()).getCurrentMediaPresentation();
+		
+		setTitle(mMediaPresentation.getName());
 
 		playingFullscreen = false;
 		videoLoaded = false;
