@@ -11,14 +11,17 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import android.content.Context;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 
+import com.mcindoe.dashstreamer.R;
 import com.mcindoe.dashstreamer.models.MediaPresentationIndex;
 
 public class MPIParser extends XMLParser {
 	
 	private MPILoadedListener mMPILoadedListener;
+	private Context mContext;
 
 	private final static String ROOT = "root";
 	private final static String BASE_URL = "baseUrl";
@@ -38,7 +41,8 @@ public class MPIParser extends XMLParser {
 		public void onFailedDownload();
 	}
 	
-	public MPIParser(String url, MPILoadedListener mpiLL) {
+	public MPIParser(Context context, String url, MPILoadedListener mpiLL) {
+		this.mContext = context;
 		this.downloadedPhotoCount = 0;
 		this.mMPILoadedListener = mpiLL;
 		(new DownloadXMLTask()).execute(url);
@@ -67,7 +71,8 @@ public class MPIParser extends XMLParser {
 		NodeList roots = doc.getElementsByTagName(ROOT);
 		
 		//Gets the base URL from the root node.
-		String baseUrl = getAttr(BASE_URL, roots.item(0));
+		String ip_addr = mContext.getResources().getString(R.string.ip_addr);
+		String baseUrl = ip_addr + getAttr(BASE_URL, roots.item(0));
 		
 		//Then grab the list of MPIs described by this document
 		NodeList mpiNodes = ((Element)roots.item(0)).getElementsByTagName(MPI);
@@ -80,7 +85,7 @@ public class MPIParser extends XMLParser {
 					Integer.parseInt(getAttr(SEASON, mpiNodes.item(i))),
 					Integer.parseInt(getAttr(EPISODE, mpiNodes.item(i))),
 					baseUrl + getAttr(URL, mpiNodes.item(i)),
-					getAttr(PHOTO_URL, mpiNodes.item(i)),
+					ip_addr + getAttr(PHOTO_URL, mpiNodes.item(i)),
 					Integer.parseInt(getAttr(DURATION, mpiNodes.item(i))));
 			
 			(new DownloadPhotoTask()).execute(index);

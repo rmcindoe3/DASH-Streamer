@@ -6,6 +6,9 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import android.content.Context;
+
+import com.mcindoe.dashstreamer.R;
 import com.mcindoe.dashstreamer.models.AdaptationSet;
 import com.mcindoe.dashstreamer.models.MediaPresentation;
 import com.mcindoe.dashstreamer.models.Period;
@@ -15,6 +18,7 @@ import com.mcindoe.dashstreamer.models.Segment;
 public class MPDParser extends XMLParser {
 	
 	private MPDLoadedListener mMPDLoadedListener;
+	private Context mContext;
 	
 	/*** All of the MPD XML tags and attributes ***/
 	private static final String MPD = "MPD";
@@ -41,7 +45,8 @@ public class MPDParser extends XMLParser {
 		public void onFailedDownload();
 	}
 	
-	public MPDParser(String url, MPDLoadedListener mpdLL) {
+	public MPDParser(Context context, String url, MPDLoadedListener mpdLL) {
+		this.mContext = context;
 		this.mMPDLoadedListener = mpdLL;
 		(new DownloadXMLTask()).execute(url);
 	}
@@ -67,6 +72,8 @@ public class MPDParser extends XMLParser {
 	public ArrayList<MediaPresentation> parseMediaPresentation() {
 		
 		ArrayList<MediaPresentation> mpds = new ArrayList<MediaPresentation>();
+		
+		String ip_addr = mContext.getResources().getString(R.string.ip_addr);
 
 		//Get the list of mpds contained in this document.
 		NodeList mpdList = doc.getElementsByTagName(MPD);
@@ -76,7 +83,7 @@ public class MPDParser extends XMLParser {
 			
 			MediaPresentation mediaPresentation = new MediaPresentation(
 					getAttr(NAME, mpdList.item(i)),
-					getAttr(BASE_URL, mpdList.item(i)),
+					ip_addr + getAttr(BASE_URL, mpdList.item(i)),
 					Integer.parseInt(getAttr(SEGMENT_LENGTH, mpdList.item(i))),
 					Integer.parseInt(getAttr(DURATION, mpdList.item(i))));
 			

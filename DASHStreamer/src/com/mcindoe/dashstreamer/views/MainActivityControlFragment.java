@@ -43,9 +43,11 @@ public class MainActivityControlFragment extends Fragment {
 		View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
 		mVideoListView = (ListView)rootView.findViewById(R.id.video_list_view);
+		
+		String ip_addr = getResources().getString(R.string.ip_addr);
 
 		//Starts a request for the MPIs from the server.
-		new MPIParser("http://10.0.0.3:4573/mpi.xml", new MPILoadedListener() {
+		new MPIParser(mFragment.getActivity(), ip_addr + ":4573/mpi.xml", new MPILoadedListener() {
 
 			/**
 			 * Called when the download from the server fails.
@@ -75,7 +77,7 @@ public class MainActivityControlFragment extends Fragment {
 					public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
 						//Grabs the MPD for the selected MPI and starts the play activity.
-						new MPDParser(mMPIs.get(position).getUrl(), new MPDLoadedListener() {
+						new MPDParser(mFragment.getActivity(), mMPIs.get(position).getUrl(), new MPDLoadedListener() {
 
 							/**
 							 * Called when the download from the server fails.
