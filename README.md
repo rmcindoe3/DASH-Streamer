@@ -3,6 +3,8 @@ DASH Streamer
 
 Android video streaming application that implements Dynamic Adaptive Streaming over HTTP.
 
+[Screenshots of Application](http://imgur.com/a/cVK5Q)
+
 How to setup the Android project:
 
 1. Clone the repo to your machine.
